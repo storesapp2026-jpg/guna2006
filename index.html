@@ -324,449 +324,448 @@ canvas{max-height:260px;}
 /* ============================================================
    CONFIG — paste your deployed Apps Script Web App URL here
    ============================================================ */
-const API_URL =227 'https://script.google.com/macros/s/AKfycbwCP_TLK31yv8gSkYEvLAwHa2V5REfdH0W933Nk33k6Z__q62f_UArOSN2vd7uaD2BZ/exec';
-               227
-/* ============227================================================
-   STATE       227
-   ============227================================================ */
-let SESSION = n227ull;   // {userId, staffId, staffName, role}
-let MASTERS = {227 staff: [], activities: [], workflows: [] };
-let lineItemCou227nt = 0;
-               227
-/* ============227================================================
-   API WRAPPER 227
-   ============227================================================ */
-async function 227callApi(action, params) {
-  if (!API_URL 227|| API_URL.indexOf('PASTE_') === 0) {
-    throw new E227rror('Backend not connected yet. Deploy code.gs and set API_URL (see SETUP.md).');
-  }            227
-  const res = a227wait fetch(API_URL, {
-    method: 'PO227ST',
-    headers: { 227'Content-Type': 'text/plain;charset=utf-8' }, // avoids CORS preflight on Apps Script
-    body: JSON.227stringify({ action, params })
-  });          227
-  const out = a227wait res.json();
-  if (!out.ok) 227throw new Error(out.error || 'Unknown API error');
-  return out.da227ta;
-}              227
-               227
-function toast(227msg) {
-  const t = doc227ument.getElementById('toast');
-  t.textContent227 = msg;
-  t.classList.a227dd('show');
-  setTimeout(()227 => t.classList.remove('show'), 2600);
-}              227
-               227
-/* ============227================================================
-   AUTH        227
-   ============227================================================ */
-async function 227doLogin() {
-  const userId 227= document.getElementById('loginUserId').value.trim();
-  const passwor227d = document.getElementById('loginPassword').value;
-  const err = d227ocument.getElementById('loginError');
-  const btn = d227ocument.getElementById('loginBtn');
-  err.textConte227nt = '';
-  if (!userId |227| !password) { err.textContent = 'Enter User ID and Password.'; return; }
-  btn.disabled 227= true; btn.textContent = 'Logging in...';
-  try {        227
-    const data 227= await callApi('login', { userId, password });
-    SESSION = d227ata;
-    sessionStor227age.setItem('kpi_session', JSON.stringify(data));
-    enterApp();227
-  } catch (e) {227
-    err.textCon227tent = e.message;
-  } finally {  227
-    btn.disable227d = false; btn.textContent = 'Log In';
-  }            227
-}              227
-               227
-function logout227() {
-  SESSION = nul227l;
-  sessionStorag227e.removeItem('kpi_session');
-  document.getE227lementById('app').style.display = 'none';
-  document.getE227lementById('loginScreen').style.display = 'flex';
-}              227
-               227
-/* ============227================================================
-   NAVIGATION  227
-   ============227================================================ */
-const NAV_ITEMS227 = [
-  { id: 'dashbo227ard', label: '📊 Dashboard', roles: ['Manager', 'Staff'] },
-  { id: 'regist227er', label: '📝 Working Register', roles: ['Manager', 'Staff'] },
-  { id: 'approv227als', label: '✅ Approvals', roles: ['Manager'] },
-  { id: 'attend227ance', label: '🗓️ Attendance', roles: ['Manager', 'Staff'] },
-  { id: 'leave'227, label: '🌴 Leave', roles: ['Manager', 'Staff'] },
-  { id: 'apprai227sal', label: '🏆 Staff Appraisal', roles: ['Manager'] },
-  { id: 'report227s', label: '📁 Reports', roles: ['Manager'] },
-  { id: 'master227s', label: '⚙️ Master Data', roles: ['Manager'] }
-];             227
-               227
-function buildN227av() {
-  const items =227 NAV_ITEMS.filter(n => n.roles.includes(SESSION.role));
-  const sidebar227 = document.getElementById('sidebar');
-  const bottom 227= document.getElementById('bottomNav');
-  sidebar.inner227HTML = '';
-  bottom.innerH227TML = '';
-  items.forEach227((n, i) => {
-    const b1 = 227document.createElement('button');
-    b1.textCont227ent = n.label;
-    b1.onclick 227= () => showView(n.id);
-    b1.dataset.227nav = n.id;
-    sidebar.app227endChild(b1);
-               227
-    const b2 = 227document.createElement('button');
-    b2.textCont227ent = n.label.split(' ')[0];
-    b2.onclick 227= () => showView(n.id);
-    b2.dataset.227nav = n.id;
-    bottom.appe227ndChild(b2);
-  });          227
-  showView(item227s[0].id);
-}              227
-               227
-function showVi227ew(id) {
-  document.quer227ySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getE227lementById('view-' + id).classList.add('active');
-  document.quer227ySelectorAll('[data-nav]').forEach(b => b.classList.toggle('active', b.dataset.nav === id));
-  if (id === 'd227ashboard') loadDashboard();
-  if (id === 'r227egister') loadRegister();
-  if (id === 'a227pprovals') loadApprovals();
-  if (id === 'a227ttendance') loadAttendance();
-  if (id === 'l227eave') loadLeave();
-  if (id === 'm227asters') loadMastersView();
-}              227
-               227
-/* ============227================================================
-   APP BOOT    227
-   ============227================================================ */
-async function 227enterApp() {
-  document.getE227lementById('loginScreen').style.display = 'none';
-  document.getE227lementById('app').style.display = 'flex';
-  document.getE227lementById('whoLabel').textContent = SESSION.staffName + ' · ' + SESSION.role;
-  try {        227
-    MASTERS = a227wait callApi('getMasters', {});
-  } catch (e) {227 toast(e.message); }
-  buildNav();  227
-  document.getE227lementById('regDate').valueAsDate = new Date();
-  document.getE227lementById('attDate').valueAsDate = new Date();
-  addLineItem()227;
-}              227
-               227
-window.addEvent227Listener('DOMContentLoaded', () => {
-  const saved =227 sessionStorage.getItem('kpi_session');
-  if (saved) { 227SESSION = JSON.parse(saved); enterApp(); }
-});            227
-               227
-/* ============227================================================
-   DASHBOARD   227
-   ============227================================================ */
-async function 227loadDashboard() {
-  const now = n227ew Date();
-  const from = 227new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
-  const to = no227w.toISOString().slice(0, 10);
-  const p = { f227rom, to };
-  if (SESSION.r227ole === 'Staff') p.staffId = SESSION.staffId;
-  let d;       227
-  try { d = awa227it callApi('getDashboard', p); } catch (e) { toast(e.message); return; }
-               227
-  document.getE227lementById('dashStats').innerHTML = `
-    <div class=227"stat-card"><div class="label">Approved Entries (MTD)</div><div class="value">${d.totalEntries}</div></div>
-    <div class=227"stat-card alt"><div class="label">Total KPI Score (MTD)</div><div class="value">${d.totalKpiScore.toFixed(1)}</div></div>
-    <div class=227"stat-card"><div class="label">Pending Approvals</div><div class="value">${d.pendingApprovals}</div></div>
-    <div class=227"stat-card alt"><div class="label">Role</div><div class="value" style="font-size:18px">${SESSION.role}</div></div>
-  `;           227
-  drawBarChart(227'chartStaff', d.byStaff, '#6F4E37');
-  drawBarChart(227'chartActivity', d.byActivity, '#9C6B45');
-}              227
-               227
-let chartRefs =227 {};
-function drawBa227rChart(canvasId, dataObj, color) {
-  const labels 227= Object.keys(dataObj);
-  const values 227= Object.values(dataObj);
-  const ctx = d227ocument.getElementById(canvasId);
-  if (chartRefs227[canvasId]) chartRefs[canvasId].destroy();
-  chartRefs[can227vasId] = new Chart(ctx, {
-    type: 'bar'227,
-    data: { lab227els, datasets: [{ data: values, backgroundColor: color, borderRadius: 5 }] },
-    options: { 227plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-  });          227
-}              227
-               227
-/* ============227================================================
-   WORKING REGI227STER
-   ============227================================================ */
-function addLin227eItem() {
-  lineItemCount227++;
-  const id = 'l227ine' + lineItemCount;
-  const div = d227ocument.createElement('div');
-  div.className227 = 'line-item';
-  div.id = id; 227
-  const activit227yOptions = MASTERS.activities.map(a => `<option value="${a['Activity ID']}">${a['Activity Name']}</option>`).join('');
-  div.innerHTML227 = `
-    <button cla227ss="remove" onclick="document.getElementById('${id}').remove()">×</button>
-    <div class=227"form-row">
-      <div><lab227el>Activity</label><select class="li-activity" onchange="populateWorkflows('${id}')"><option value="">Select</option>${activityOptions}</select></div>
-      <div><lab227el>Workflow</label><select class="li-workflow"><option value="">Select Activity first</option></select></div>
-      <div><lab227el>Unit</label><input class="li-unit" type="text" readonly></div>
-    </div>     227
-    <div class=227"form-row">
-      <div><lab227el>Target</label><input class="li-target" type="number" min="0" step="1" value="0"></div>
-      <div><lab227el>Actual</label><input class="li-actual" type="number" min="0" step="1" value="0"></div>
-      <div><lab227el>Remarks</label><input class="li-remarks" type="text"></div>
-    </div>     227
-    <div class=227"li-hint" style="font-size:11.5px;color:var(--coffee-500);margin-top:2px;"></div>
-  `;           227
-  document.getE227lementById('lineItems').appendChild(div);
-}              227
-               227
-function popula227teWorkflows(lineId) {
-  const div = d227ocument.getElementById(lineId);
-  const actId =227 div.querySelector('.li-activity').value;
-  const wfSelec227t = div.querySelector('.li-workflow');
-  const wfs = M227ASTERS.workflows.filter(w => w['Activity ID'] === actId);
-  wfSelect.inne227rHTML = '<option value="">Select</option>' + wfs.map(w =>
-    `<option va227lue="${w['Workflow ID']}" data-unit="${w['Unit']}" data-target="${w['Target']}" data-expected="${w['Expected Output']}" data-weightage="${w['Weightage %']}">${w['Workflow Name']}</option>`
-  ).join('');  227
-  wfSelect.onch227ange = () => {
-    const sel =227 wfSelect.options[wfSelect.selectedIndex];
-    div.querySe227lector('.li-unit').value = sel ? (sel.dataset.unit || '') : '';
-    div.querySe227lector('.li-target').value = sel ? (sel.dataset.target || 0) : 0;
-    div.querySe227lector('.li-hint').textContent = sel && sel.dataset.expected
-      ? `Weight227age ${sel.dataset.weightage}% · Expected: ${sel.dataset.expected}` : '';
-  };           227
-}              227
-               227
-async function 227submitWorkingEntries() {
-  const date = 227document.getElementById('regDate').value;
-  if (!date) { 227toast('Select a date'); return; }
-  const lines =227 [];
-  document.quer227ySelectorAll('.line-item').forEach(div => {
-    const activ227ityId = div.querySelector('.li-activity').value;
-    const workf227lowId = div.querySelector('.li-workflow').value;
-    if (!activi227tyId || !workflowId) return;
-    lines.push(227{
-      activityI227d, workflowId,
-      unit: div227.querySelector('.li-unit').value,
-      target: d227iv.querySelector('.li-target').value,
-      actual: d227iv.querySelector('.li-actual').value,
-      remarks: 227div.querySelector('.li-remarks').value
-    });        227
-  });          227
-  if (lines.len227gth === 0) { toast('Add at least one workflow with valid Activity/Workflow selected'); return; }
-  try {        227
-    const r = a227wait callApi('addWorkingEntries', { staffId: SESSION.staffId, staffName: SESSION.staffName, date, lines });
-    await callA227pi('submitEntryGroup', { staffId: SESSION.staffId, groupId: r.groupId });
-    toast('Subm227itted for approval');
-    document.ge227tElementById('lineItems').innerHTML = '';
-    addLineItem227();
-    loadRegiste227r();
-  } catch (e) {227 toast(e.message); }
-}              227
-               227
-async function 227loadRegister() {
-  const p = SES227SION.role === 'Staff' ? { staffId: SESSION.staffId } : {};
-  let rows;    227
-  try { rows = 227await callApi('getWorkingRegister', p); } catch (e) { toast(e.message); return; }
-  rows.sort((a,227 b) => new Date(b['Date']) - new Date(a['Date']));
-  const tbody =227 document.querySelector('#registerTable tbody');
-  tbody.innerHT227ML = rows.slice(0, 50).map(r => `
-    <tr>       227
-      <td>${fmt227Date(r['Date'])}</td><td>${r['Staff Name']}</td><td>${r['Activity Name']}</td><td>${r['Workflow Name']}</td>
-      <td>${r['227Target']}</td><td>${r['Actual']}</td><td>${r['Achievement %']}%</td><td>${r['KPI Score']}</td>
-      <td><span227 class="badge ${r['Approval Status']}">${r['Approval Status']}</span></td>
-    </tr>`).joi227n('') || `<tr><td colspan="9" class="empty">No entries yet</td></tr>`;
-}              227
-               227
-/* ============227================================================
-   APPROVALS (M227anager)
-   ============227================================================ */
-async function 227loadApprovals() {
-  let groups;  227
-  try { groups 227= await callApi('getPendingApprovals', {}); } catch (e) { toast(e.message); return; }
-  const el = do227cument.getElementById('approvalsList');
-  if (groups.le227ngth === 0) { el.innerHTML = '<div class="card empty">No pending approvals 🎉</div>'; return; }
-  el.innerHTML 227= groups.map(g => `
-    <div class=227"card">
-      <div styl227e="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <div><s227trong>${g.staffName}</strong> &middot; ${fmtDate(g.date)}</div>
-        <div>  227
-          <butt227on class="btn btn-ok btn-sm" onclick="decideGroup('${g.groupId}','Approved')">Approve</button>
-          <butt227on class="btn btn-danger btn-sm" onclick="decideGroup('${g.groupId}','Rejected')">Reject</button>
-        </div> 227
-      </div>   227
-      <div clas227s="table-wrap"><table><thead><tr><th>Activity</th><th>Workflow</th><th>Target</th><th>Actual</th><th>Ach %</th><th>KPI Score</th></tr></thead><tbody>
-        ${g.lin227es.map(l => `<tr><td>${l['Activity Name']}</td><td>${l['Workflow Name']}</td><td>${l['Target']}</td><td>${l['Actual']}</td><td>${l['Achievement %']}%</td><td>${l['KPI Score']}</td></tr>`).join('')}
-      </tbody><227/table></div>
-    </div>     227
-  `).join(''); 227
-}              227
-               227
-async function 227decideGroup(groupId, decision) {
-  try {        227
-    await callA227pi('approveEntryGroup', { actorRole: SESSION.role, actorUserId: SESSION.userId, groupId, decision });
-    toast(decis227ion);
-    loadApprova227ls();
-  } catch (e) {227 toast(e.message); }
-}              227
-               227
-/* ============227================================================
-   ATTENDANCE  227
-   ============227================================================ */
-async function 227markAttendance() {
-  const date = 227document.getElementById('attDate').value;
-  const status 227= document.getElementById('attStatus').value;
-  const permiss227ionHours = document.getElementById('attPermHrs').value;
-  const remarks227 = document.getElementById('attRemarks').value;
-  if (!date) { 227toast('Select a date'); return; }
-  try {        227
-    await callA227pi('markAttendance', { staffId: SESSION.staffId, staffName: SESSION.staffName, date, status, permissionHours, remarks });
-    toast('Atte227ndance saved');
-    loadAttenda227nce();
-  } catch (e) {227 toast(e.message); }
-}              227
-               227
-async function 227loadAttendance() {
-  const p = SES227SION.role === 'Staff' ? { staffId: SESSION.staffId } : {};
-  let rows;    227
-  try { rows = 227await callApi('getAttendance', p); } catch (e) { toast(e.message); return; }
-  rows.sort((a,227 b) => new Date(b['Date']) - new Date(a['Date']));
-  document.quer227ySelector('#attendanceTable tbody').innerHTML = rows.slice(0, 50).map(r => `
-    <tr><td>${f227mtDate(r['Date'])}</td><td>${r['Staff Name']}</td><td>${r['Status']}</td><td>${r['Permission Hours']}</td><td>${r['Remarks']}</td></tr>
-  `).join('') |227| `<tr><td colspan="5" class="empty">No attendance records</td></tr>`;
-}              227
-               227
-/* ============227================================================
-   LEAVE       227
-   ============227================================================ */
-async function 227applyLeave() {
-  const fromDat227e = document.getElementById('lvFrom').value;
-  const toDate 227= document.getElementById('lvTo').value;
-  const leaveTy227pe = document.getElementById('lvType').value;
-  const reason 227= document.getElementById('lvReason').value;
-  if (!fromDate227 || !toDate) { toast('Select From and To dates'); return; }
-  try {        227
-    await callA227pi('applyLeave', { staffId: SESSION.staffId, staffName: SESSION.staffName, fromDate, toDate, leaveType, reason });
-    toast('Leav227e applied');
-    loadLeave()227;
-  } catch (e) {227 toast(e.message); }
-}              227
-               227
-async function 227loadLeave() {
-  const p = SES227SION.role === 'Staff' ? { staffId: SESSION.staffId } : {};
-  let rows;    227
-  try { rows = 227await callApi('getLeaves', p); } catch (e) { toast(e.message); return; }
-  document.quer227ySelector('#leaveTable tbody').innerHTML = rows.map(r => `
-    <tr>       227
-      <td>${r['227Staff Name']}</td><td>${fmtDate(r['From Date'])}</td><td>${fmtDate(r['To Date'])}</td>
-      <td>${r['227Leave Type']}</td><td>${r['Reason']}</td><td><span class="badge ${r['Status'] === 'Approved' ? 'Approved' : (r['Status'] === 'Rejected' ? 'Rejected' : 'Submitted')}">${r['Status']}</span></td>
-      <td>${SES227SION.role === 'Manager' && r['Status'] === 'Pending' ? `
-        <button227 class="btn btn-ok btn-sm" onclick="decideLeave('${r['Leave ID']}','Approved')">✓</button>
-        <button227 class="btn btn-danger btn-sm" onclick="decideLeave('${r['Leave ID']}','Rejected')">✕</button>` : ''}</td>
-    </tr>      227
-  `).join('') |227| `<tr><td colspan="7" class="empty">No leave records</td></tr>`;
-}              227
-               227
-async function 227decideLeave(leaveId, decision) {
-  try {        227
-    await callA227pi('decideLeave', { actorRole: SESSION.role, actorUserId: SESSION.userId, leaveId, decision });
-    toast(decis227ion);
-    loadLeave()227;
-  } catch (e) {227 toast(e.message); }
-}              227
-               227
-/* ============227================================================
-   APPRAISAL   227
-   ============227================================================ */
-let lastApprais227al = [];
-async function 227loadAppraisal() {
-  const from = 227document.getElementById('apprFrom').value;
-  const to = do227cument.getElementById('apprTo').value;
-  try { lastApp227raisal = await callApi('getAppraisal', { from, to }); } catch (e) { toast(e.message); return; }
-  document.quer227ySelector('#appraisalTable tbody').innerHTML = lastAppraisal.map(a => `
-    <tr>       227
-      <td>${a.s227taffName}</td><td>${a.designation}</td><td>${a.section}</td><td>${a.entries}</td>
-      <td>${a.t227otalKpiScore.toFixed(1)}</td><td>${a.totalMaxScore.toFixed(1)}</td><td>${a.overallPct}%</td>
-      <td><span227 class="badge ${ratingBadgeClass(a.rating)}">${a.rating}</span></td>
-    </tr>`).joi227n('') || `<tr><td colspan="8" class="empty">No approved entries in this range</td></tr>`;
-}              227
-function rating227BadgeClass(r) {
-  if (r === 'Ou227tstanding' || r === 'Excellent') return 'Approved';
-  if (r === 'Go227od' || r === 'Satisfactory') return 'Submitted';
-  return 'Rejec227ted';
-}              227
-function export227Appraisal() {
-  if (!lastAppr227aisal.length) { toast('Run the appraisal first'); return; }
-  const rows = 227lastAppraisal.map(a => ({
-    Staff: a.st227affName, Designation: a.designation, Section: a.section, Entries: a.entries,
-    'KPI Score'227: a.totalKpiScore, 'Max Possible': a.totalMaxScore, 'Overall %': a.overallPct, Rating: a.rating
-  }));         227
-  exportXlsx(ro227ws, 'Staff_Appraisal.xlsx');
-}              227
-               227
-/* ============227================================================
-   REPORTS     227
-   ============227================================================ */
-let lastReport 227= [];
-async function 227runReport() {
-  const from = 227document.getElementById('repFrom').value;
-  const to = do227cument.getElementById('repTo').value;
-  const groupFi227eld = document.getElementById('repGroupBy').value;
-  let rows;    227
-  try { rows = 227await callApi('getWorkingRegister', { from, to, status: 'Approved' }); } catch (e) { toast(e.message); return; }
-  const agg = {227};
-  rows.forEach(227r => {
-    const key =227 r[groupField];
-    if (!agg[ke227y]) agg[key] = { key, entries: 0, target: 0, actual: 0, achSum: 0, kpi: 0 };
-    agg[key].en227tries++;
-    agg[key].ta227rget += Number(r['Target']) || 0;
-    agg[key].ac227tual += Number(r['Actual']) || 0;
-    agg[key].ac227hSum += Number(r['Achievement %']) || 0;
-    agg[key].kp227i += Number(r['KPI Score']) || 0;
-  });          227
-  lastReport = 227Object.values(agg).map(a => ({
-    Group: a.ke227y, Entries: a.entries, 'Total Target': a.target, 'Total Actual': a.actual,
-    'Avg Achiev227ement %': Math.round((a.achSum / a.entries) * 100) / 100, 'Total KPI Score': Math.round(a.kpi * 100) / 100
-  }));         227
-  document.quer227ySelector('#reportTable tbody').innerHTML = lastReport.map(r => `
-    <tr><td>${r227.Group}</td><td>${r.Entries}</td><td>${r['Total Target']}</td><td>${r['Total Actual']}</td><td>${r['Avg Achievement %']}%</td><td>${r['Total KPI Score']}</td></tr>
-  `).join('') |227| `<tr><td colspan="6" class="empty">No data for this range</td></tr>`;
-}              227
-function export227Report() {
-  if (!lastRepo227rt.length) { toast('Run the report first'); return; }
-  exportXlsx(la227stReport, 'Stores_Report.xlsx');
-}              227
-               227
-function export227Xlsx(rows, filename) {
-  const ws = XL227SX.utils.json_to_sheet(rows);
-  const wb = XL227SX.utils.book_new();
-  XLSX.utils.bo227ok_append_sheet(wb, ws, 'Report');
-  XLSX.writeFil227e(wb, filename);
-}              227
-               227
-/* ============227================================================
-   MASTERS VIEW227
-   ============227================================================ */
-function loadMa227stersView() {
-  document.quer227ySelector('#staffTable tbody').innerHTML = MASTERS.staff.map(s => `
-    <tr><td>${s227['Staff ID']}</td><td>${s['Staff Name']}</td><td>${s['Designation']}</td><td>${s['Section']}</td><td>${s['Status']}</td></tr>
-  `).join(''); 227
-  document.quer227ySelector('#workflowTable tbody').innerHTML = MASTERS.workflows.map(w => `
-    <tr><td>${w227['Activity Name']}</td><td>${w['Workflow Name']}</td><td>${w['KPI Name']}</td><td>${w['Unit']}</td>
-    <td>${w['Ta227rget']}</td><td>${w['Weightage %']}</td><td>${w['Max Score']}</td><td>${w['Expected Output']}</td><td>${w['Status']}</td></tr>
-  `).join(''); 227
-}              227
-               227
-/* ============227================================================
-   UTIL        227
-   ============227================================================ */
-function fmtDat227e(d) {
-  if (!d) retur227n '';
-  const dt = ne227w Date(d);
-  if (isNaN(dt)227) return d;
-  const dd = St227ring(dt.getDate()).padStart(2, '0');
-  const mm = St227ring(dt.getMonth() + 1).padStart(2, '0');
-  return `${dd}227-${mm}-${dt.getFullYear()}`;
-}              227
-</script>      227
-</body>        227
-</html>        227
-               227
+const API_URL = 'https://script.google.com/macros/s/AKfycbwCP_TLK31yv8gSkYEvLAwHa2V5REfdH0W933Nk33k6Z__q62f_UArOSN2vd7uaD2BZ/exec';
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let SESSION = null;   // {userId, staffId, staffName, role}
+let MASTERS = { staff: [], activities: [], workflows: [] };
+let lineItemCount = 0;
+
+/* ============================================================
+   API WRAPPER
+   ============================================================ */
+async function callApi(action, params) {
+  if (!API_URL || API_URL.indexOf('PASTE_') === 0) {
+    throw new Error('Backend not connected yet. Deploy code.gs and set API_URL (see SETUP.md).');
+  }
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids CORS preflight on Apps Script
+    body: JSON.stringify({ action, params })
+  });
+  const out = await res.json();
+  if (!out.ok) throw new Error(out.error || 'Unknown API error');
+  return out.data;
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+/* ============================================================
+   AUTH
+   ============================================================ */
+async function doLogin() {
+  const userId = document.getElementById('loginUserId').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const err = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+  err.textContent = '';
+  if (!userId || !password) { err.textContent = 'Enter User ID and Password.'; return; }
+  btn.disabled = true; btn.textContent = 'Logging in...';
+  try {
+    const data = await callApi('login', { userId, password });
+    SESSION = data;
+    sessionStorage.setItem('kpi_session', JSON.stringify(data));
+    enterApp();
+  } catch (e) {
+    err.textContent = e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Log In';
+  }
+}
+
+function logout() {
+  SESSION = null;
+  sessionStorage.removeItem('kpi_session');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+const NAV_ITEMS = [
+  { id: 'dashboard', label: '📊 Dashboard', roles: ['Manager', 'Staff'] },
+  { id: 'register', label: '📝 Working Register', roles: ['Manager', 'Staff'] },
+  { id: 'approvals', label: '✅ Approvals', roles: ['Manager'] },
+  { id: 'attendance', label: '🗓️ Attendance', roles: ['Manager', 'Staff'] },
+  { id: 'leave', label: '🌴 Leave', roles: ['Manager', 'Staff'] },
+  { id: 'appraisal', label: '🏆 Staff Appraisal', roles: ['Manager'] },
+  { id: 'reports', label: '📁 Reports', roles: ['Manager'] },
+  { id: 'masters', label: '⚙️ Master Data', roles: ['Manager'] }
+];
+
+function buildNav() {
+  const items = NAV_ITEMS.filter(n => n.roles.includes(SESSION.role));
+  const sidebar = document.getElementById('sidebar');
+  const bottom = document.getElementById('bottomNav');
+  sidebar.innerHTML = '';
+  bottom.innerHTML = '';
+  items.forEach((n, i) => {
+    const b1 = document.createElement('button');
+    b1.textContent = n.label;
+    b1.onclick = () => showView(n.id);
+    b1.dataset.nav = n.id;
+    sidebar.appendChild(b1);
+
+    const b2 = document.createElement('button');
+    b2.textContent = n.label.split(' ')[0];
+    b2.onclick = () => showView(n.id);
+    b2.dataset.nav = n.id;
+    bottom.appendChild(b2);
+  });
+  showView(items[0].id);
+}
+
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + id).classList.add('active');
+  document.querySelectorAll('[data-nav]').forEach(b => b.classList.toggle('active', b.dataset.nav === id));
+  if (id === 'dashboard') loadDashboard();
+  if (id === 'register') loadRegister();
+  if (id === 'approvals') loadApprovals();
+  if (id === 'attendance') loadAttendance();
+  if (id === 'leave') loadLeave();
+  if (id === 'masters') loadMastersView();
+}
+
+/* ============================================================
+   APP BOOT
+   ============================================================ */
+async function enterApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('whoLabel').textContent = SESSION.staffName + ' · ' + SESSION.role;
+  try {
+    MASTERS = await callApi('getMasters', {});
+  } catch (e) { toast(e.message); }
+  buildNav();
+  document.getElementById('regDate').valueAsDate = new Date();
+  document.getElementById('attDate').valueAsDate = new Date();
+  addLineItem();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = sessionStorage.getItem('kpi_session');
+  if (saved) { SESSION = JSON.parse(saved); enterApp(); }
+});
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+async function loadDashboard() {
+  const now = new Date();
+  const from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+  const to = now.toISOString().slice(0, 10);
+  const p = { from, to };
+  if (SESSION.role === 'Staff') p.staffId = SESSION.staffId;
+  let d;
+  try { d = await callApi('getDashboard', p); } catch (e) { toast(e.message); return; }
+
+  document.getElementById('dashStats').innerHTML = `
+    <div class="stat-card"><div class="label">Approved Entries (MTD)</div><div class="value">${d.totalEntries}</div></div>
+    <div class="stat-card alt"><div class="label">Total KPI Score (MTD)</div><div class="value">${d.totalKpiScore.toFixed(1)}</div></div>
+    <div class="stat-card"><div class="label">Pending Approvals</div><div class="value">${d.pendingApprovals}</div></div>
+    <div class="stat-card alt"><div class="label">Role</div><div class="value" style="font-size:18px">${SESSION.role}</div></div>
+  `;
+  drawBarChart('chartStaff', d.byStaff, '#6F4E37');
+  drawBarChart('chartActivity', d.byActivity, '#9C6B45');
+}
+
+let chartRefs = {};
+function drawBarChart(canvasId, dataObj, color) {
+  const labels = Object.keys(dataObj);
+  const values = Object.values(dataObj);
+  const ctx = document.getElementById(canvasId);
+  if (chartRefs[canvasId]) chartRefs[canvasId].destroy();
+  chartRefs[canvasId] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ data: values, backgroundColor: color, borderRadius: 5 }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+}
+
+/* ============================================================
+   WORKING REGISTER
+   ============================================================ */
+function addLineItem() {
+  lineItemCount++;
+  const id = 'line' + lineItemCount;
+  const div = document.createElement('div');
+  div.className = 'line-item';
+  div.id = id;
+  const activityOptions = MASTERS.activities.map(a => `<option value="${a['Activity ID']}">${a['Activity Name']}</option>`).join('');
+  div.innerHTML = `
+    <button class="remove" onclick="document.getElementById('${id}').remove()">×</button>
+    <div class="form-row">
+      <div><label>Activity</label><select class="li-activity" onchange="populateWorkflows('${id}')"><option value="">Select</option>${activityOptions}</select></div>
+      <div><label>Workflow</label><select class="li-workflow"><option value="">Select Activity first</option></select></div>
+      <div><label>Unit</label><input class="li-unit" type="text" readonly></div>
+    </div>
+    <div class="form-row">
+      <div><label>Target</label><input class="li-target" type="number" min="0" step="1" value="0"></div>
+      <div><label>Actual</label><input class="li-actual" type="number" min="0" step="1" value="0"></div>
+      <div><label>Remarks</label><input class="li-remarks" type="text"></div>
+    </div>
+    <div class="li-hint" style="font-size:11.5px;color:var(--coffee-500);margin-top:2px;"></div>
+  `;
+  document.getElementById('lineItems').appendChild(div);
+}
+
+function populateWorkflows(lineId) {
+  const div = document.getElementById(lineId);
+  const actId = div.querySelector('.li-activity').value;
+  const wfSelect = div.querySelector('.li-workflow');
+  const wfs = MASTERS.workflows.filter(w => w['Activity ID'] === actId);
+  wfSelect.innerHTML = '<option value="">Select</option>' + wfs.map(w =>
+    `<option value="${w['Workflow ID']}" data-unit="${w['Unit']}" data-target="${w['Target']}" data-expected="${w['Expected Output']}" data-weightage="${w['Weightage %']}">${w['Workflow Name']}</option>`
+  ).join('');
+  wfSelect.onchange = () => {
+    const sel = wfSelect.options[wfSelect.selectedIndex];
+    div.querySelector('.li-unit').value = sel ? (sel.dataset.unit || '') : '';
+    div.querySelector('.li-target').value = sel ? (sel.dataset.target || 0) : 0;
+    div.querySelector('.li-hint').textContent = sel && sel.dataset.expected
+      ? `Weightage ${sel.dataset.weightage}% · Expected: ${sel.dataset.expected}` : '';
+  };
+}
+
+async function submitWorkingEntries() {
+  const date = document.getElementById('regDate').value;
+  if (!date) { toast('Select a date'); return; }
+  const lines = [];
+  document.querySelectorAll('.line-item').forEach(div => {
+    const activityId = div.querySelector('.li-activity').value;
+    const workflowId = div.querySelector('.li-workflow').value;
+    if (!activityId || !workflowId) return;
+    lines.push({
+      activityId, workflowId,
+      unit: div.querySelector('.li-unit').value,
+      target: div.querySelector('.li-target').value,
+      actual: div.querySelector('.li-actual').value,
+      remarks: div.querySelector('.li-remarks').value
+    });
+  });
+  if (lines.length === 0) { toast('Add at least one workflow with valid Activity/Workflow selected'); return; }
+  try {
+    const r = await callApi('addWorkingEntries', { staffId: SESSION.staffId, staffName: SESSION.staffName, date, lines });
+    await callApi('submitEntryGroup', { staffId: SESSION.staffId, groupId: r.groupId });
+    toast('Submitted for approval');
+    document.getElementById('lineItems').innerHTML = '';
+    addLineItem();
+    loadRegister();
+  } catch (e) { toast(e.message); }
+}
+
+async function loadRegister() {
+  const p = SESSION.role === 'Staff' ? { staffId: SESSION.staffId } : {};
+  let rows;
+  try { rows = await callApi('getWorkingRegister', p); } catch (e) { toast(e.message); return; }
+  rows.sort((a, b) => new Date(b['Date']) - new Date(a['Date']));
+  const tbody = document.querySelector('#registerTable tbody');
+  tbody.innerHTML = rows.slice(0, 50).map(r => `
+    <tr>
+      <td>${fmtDate(r['Date'])}</td><td>${r['Staff Name']}</td><td>${r['Activity Name']}</td><td>${r['Workflow Name']}</td>
+      <td>${r['Target']}</td><td>${r['Actual']}</td><td>${r['Achievement %']}%</td><td>${r['KPI Score']}</td>
+      <td><span class="badge ${r['Approval Status']}">${r['Approval Status']}</span></td>
+    </tr>`).join('') || `<tr><td colspan="9" class="empty">No entries yet</td></tr>`;
+}
+
+/* ============================================================
+   APPROVALS (Manager)
+   ============================================================ */
+async function loadApprovals() {
+  let groups;
+  try { groups = await callApi('getPendingApprovals', {}); } catch (e) { toast(e.message); return; }
+  const el = document.getElementById('approvalsList');
+  if (groups.length === 0) { el.innerHTML = '<div class="card empty">No pending approvals 🎉</div>'; return; }
+  el.innerHTML = groups.map(g => `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div><strong>${g.staffName}</strong> &middot; ${fmtDate(g.date)}</div>
+        <div>
+          <button class="btn btn-ok btn-sm" onclick="decideGroup('${g.groupId}','Approved')">Approve</button>
+          <button class="btn btn-danger btn-sm" onclick="decideGroup('${g.groupId}','Rejected')">Reject</button>
+        </div>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>Activity</th><th>Workflow</th><th>Target</th><th>Actual</th><th>Ach %</th><th>KPI Score</th></tr></thead><tbody>
+        ${g.lines.map(l => `<tr><td>${l['Activity Name']}</td><td>${l['Workflow Name']}</td><td>${l['Target']}</td><td>${l['Actual']}</td><td>${l['Achievement %']}%</td><td>${l['KPI Score']}</td></tr>`).join('')}
+      </tbody></table></div>
+    </div>
+  `).join('');
+}
+
+async function decideGroup(groupId, decision) {
+  try {
+    await callApi('approveEntryGroup', { actorRole: SESSION.role, actorUserId: SESSION.userId, groupId, decision });
+    toast(decision);
+    loadApprovals();
+  } catch (e) { toast(e.message); }
+}
+
+/* ============================================================
+   ATTENDANCE
+   ============================================================ */
+async function markAttendance() {
+  const date = document.getElementById('attDate').value;
+  const status = document.getElementById('attStatus').value;
+  const permissionHours = document.getElementById('attPermHrs').value;
+  const remarks = document.getElementById('attRemarks').value;
+  if (!date) { toast('Select a date'); return; }
+  try {
+    await callApi('markAttendance', { staffId: SESSION.staffId, staffName: SESSION.staffName, date, status, permissionHours, remarks });
+    toast('Attendance saved');
+    loadAttendance();
+  } catch (e) { toast(e.message); }
+}
+
+async function loadAttendance() {
+  const p = SESSION.role === 'Staff' ? { staffId: SESSION.staffId } : {};
+  let rows;
+  try { rows = await callApi('getAttendance', p); } catch (e) { toast(e.message); return; }
+  rows.sort((a, b) => new Date(b['Date']) - new Date(a['Date']));
+  document.querySelector('#attendanceTable tbody').innerHTML = rows.slice(0, 50).map(r => `
+    <tr><td>${fmtDate(r['Date'])}</td><td>${r['Staff Name']}</td><td>${r['Status']}</td><td>${r['Permission Hours']}</td><td>${r['Remarks']}</td></tr>
+  `).join('') || `<tr><td colspan="5" class="empty">No attendance records</td></tr>`;
+}
+
+/* ============================================================
+   LEAVE
+   ============================================================ */
+async function applyLeave() {
+  const fromDate = document.getElementById('lvFrom').value;
+  const toDate = document.getElementById('lvTo').value;
+  const leaveType = document.getElementById('lvType').value;
+  const reason = document.getElementById('lvReason').value;
+  if (!fromDate || !toDate) { toast('Select From and To dates'); return; }
+  try {
+    await callApi('applyLeave', { staffId: SESSION.staffId, staffName: SESSION.staffName, fromDate, toDate, leaveType, reason });
+    toast('Leave applied');
+    loadLeave();
+  } catch (e) { toast(e.message); }
+}
+
+async function loadLeave() {
+  const p = SESSION.role === 'Staff' ? { staffId: SESSION.staffId } : {};
+  let rows;
+  try { rows = await callApi('getLeaves', p); } catch (e) { toast(e.message); return; }
+  document.querySelector('#leaveTable tbody').innerHTML = rows.map(r => `
+    <tr>
+      <td>${r['Staff Name']}</td><td>${fmtDate(r['From Date'])}</td><td>${fmtDate(r['To Date'])}</td>
+      <td>${r['Leave Type']}</td><td>${r['Reason']}</td><td><span class="badge ${r['Status'] === 'Approved' ? 'Approved' : (r['Status'] === 'Rejected' ? 'Rejected' : 'Submitted')}">${r['Status']}</span></td>
+      <td>${SESSION.role === 'Manager' && r['Status'] === 'Pending' ? `
+        <button class="btn btn-ok btn-sm" onclick="decideLeave('${r['Leave ID']}','Approved')">✓</button>
+        <button class="btn btn-danger btn-sm" onclick="decideLeave('${r['Leave ID']}','Rejected')">✕</button>` : ''}</td>
+    </tr>
+  `).join('') || `<tr><td colspan="7" class="empty">No leave records</td></tr>`;
+}
+
+async function decideLeave(leaveId, decision) {
+  try {
+    await callApi('decideLeave', { actorRole: SESSION.role, actorUserId: SESSION.userId, leaveId, decision });
+    toast(decision);
+    loadLeave();
+  } catch (e) { toast(e.message); }
+}
+
+/* ============================================================
+   APPRAISAL
+   ============================================================ */
+let lastAppraisal = [];
+async function loadAppraisal() {
+  const from = document.getElementById('apprFrom').value;
+  const to = document.getElementById('apprTo').value;
+  try { lastAppraisal = await callApi('getAppraisal', { from, to }); } catch (e) { toast(e.message); return; }
+  document.querySelector('#appraisalTable tbody').innerHTML = lastAppraisal.map(a => `
+    <tr>
+      <td>${a.staffName}</td><td>${a.designation}</td><td>${a.section}</td><td>${a.entries}</td>
+      <td>${a.totalKpiScore.toFixed(1)}</td><td>${a.totalMaxScore.toFixed(1)}</td><td>${a.overallPct}%</td>
+      <td><span class="badge ${ratingBadgeClass(a.rating)}">${a.rating}</span></td>
+    </tr>`).join('') || `<tr><td colspan="8" class="empty">No approved entries in this range</td></tr>`;
+}
+function ratingBadgeClass(r) {
+  if (r === 'Outstanding' || r === 'Excellent') return 'Approved';
+  if (r === 'Good' || r === 'Satisfactory') return 'Submitted';
+  return 'Rejected';
+}
+function exportAppraisal() {
+  if (!lastAppraisal.length) { toast('Run the appraisal first'); return; }
+  const rows = lastAppraisal.map(a => ({
+    Staff: a.staffName, Designation: a.designation, Section: a.section, Entries: a.entries,
+    'KPI Score': a.totalKpiScore, 'Max Possible': a.totalMaxScore, 'Overall %': a.overallPct, Rating: a.rating
+  }));
+  exportXlsx(rows, 'Staff_Appraisal.xlsx');
+}
+
+/* ============================================================
+   REPORTS
+   ============================================================ */
+let lastReport = [];
+async function runReport() {
+  const from = document.getElementById('repFrom').value;
+  const to = document.getElementById('repTo').value;
+  const groupField = document.getElementById('repGroupBy').value;
+  let rows;
+  try { rows = await callApi('getWorkingRegister', { from, to, status: 'Approved' }); } catch (e) { toast(e.message); return; }
+  const agg = {};
+  rows.forEach(r => {
+    const key = r[groupField];
+    if (!agg[key]) agg[key] = { key, entries: 0, target: 0, actual: 0, achSum: 0, kpi: 0 };
+    agg[key].entries++;
+    agg[key].target += Number(r['Target']) || 0;
+    agg[key].actual += Number(r['Actual']) || 0;
+    agg[key].achSum += Number(r['Achievement %']) || 0;
+    agg[key].kpi += Number(r['KPI Score']) || 0;
+  });
+  lastReport = Object.values(agg).map(a => ({
+    Group: a.key, Entries: a.entries, 'Total Target': a.target, 'Total Actual': a.actual,
+    'Avg Achievement %': Math.round((a.achSum / a.entries) * 100) / 100, 'Total KPI Score': Math.round(a.kpi * 100) / 100
+  }));
+  document.querySelector('#reportTable tbody').innerHTML = lastReport.map(r => `
+    <tr><td>${r.Group}</td><td>${r.Entries}</td><td>${r['Total Target']}</td><td>${r['Total Actual']}</td><td>${r['Avg Achievement %']}%</td><td>${r['Total KPI Score']}</td></tr>
+  `).join('') || `<tr><td colspan="6" class="empty">No data for this range</td></tr>`;
+}
+function exportReport() {
+  if (!lastReport.length) { toast('Run the report first'); return; }
+  exportXlsx(lastReport, 'Stores_Report.xlsx');
+}
+
+function exportXlsx(rows, filename) {
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Report');
+  XLSX.writeFile(wb, filename);
+}
+
+/* ============================================================
+   MASTERS VIEW
+   ============================================================ */
+function loadMastersView() {
+  document.querySelector('#staffTable tbody').innerHTML = MASTERS.staff.map(s => `
+    <tr><td>${s['Staff ID']}</td><td>${s['Staff Name']}</td><td>${s['Designation']}</td><td>${s['Section']}</td><td>${s['Status']}</td></tr>
+  `).join('');
+  document.querySelector('#workflowTable tbody').innerHTML = MASTERS.workflows.map(w => `
+    <tr><td>${w['Activity Name']}</td><td>${w['Workflow Name']}</td><td>${w['KPI Name']}</td><td>${w['Unit']}</td>
+    <td>${w['Target']}</td><td>${w['Weightage %']}</td><td>${w['Max Score']}</td><td>${w['Expected Output']}</td><td>${w['Status']}</td></tr>
+  `).join('');
+}
+
+/* ============================================================
+   UTIL
+   ============================================================ */
+function fmtDate(d) {
+  if (!d) return '';
+  const dt = new Date(d);
+  if (isNaN(dt)) return d;
+  const dd = String(dt.getDate()).padStart(2, '0');
+  const mm = String(dt.getMonth() + 1).padStart(2, '0');
+  return `${dd}-${mm}-${dt.getFullYear()}`;
+}
+</script>
+</body>
+</html>
