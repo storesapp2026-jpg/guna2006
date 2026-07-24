@@ -1,1048 +1,772 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sri Narasus Coffee Company — Stores Staff Working Register &amp; Appraisal</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stores KPI &amp; Appraisal | Sri Narasu's Coffee Co.</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
-/* =========================================================================
-   DESIGN TOKENS
-   Palette drawn from roasted coffee: bark brown, cream parchment, caramel
-   accent, dark roast ink. Fraunces (display) + Inter (body/data).
-   ========================================================================= */
 :root{
-  --roast-900:#2A1B12;
-  --roast-700:#4A2E1D;
-  --coffee-600:#6F4E37;
-  --caramel-500:#C08A4E;
-  --caramel-400:#D9A876;
-  --cream-100:#F7F1E7;
-  --cream-50:#FBF7F0;
-  --ink:#241A12;
-  --line:#E4D8C4;
-  --success:#3E7A4C;
-  --warn:#B5791E;
-  --danger:#B23A2E;
-  --white:#FFFFFF;
-  --radius:14px;
-  --shadow:0 4px 16px rgba(42,27,18,0.08);
-  --shadow-lg:0 10px 32px rgba(42,27,18,0.14);
-  --sidebar-w:250px;
-  --font-display:'Fraunces', serif;
-  --font-body:'Inter', sans-serif;
+  --coffee-900:#3B2415; --coffee-700:#6F4E37; --coffee-500:#9C6B45;
+  --coffee-300:#C8A27A; --cream-100:#FAF3E7; --cream-50:#FFFDF9;
+  --ok:#5A7D4A; --warn:#C08A2E; --danger:#B5493A;
+  --radius:12px; --shadow:0 4px 16px rgba(59,36,21,0.10);
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
 }
-:root[data-theme="dark"]{
-  --cream-100:#241A12;
-  --cream-50:#1C140D;
-  --ink:#F3EBDD;
-  --line:#4A3826;
-  --white:#2E2113;
-}
-*{box-sizing:border-box;}
-html,body{margin:0;padding:0;}
-body{
-  font-family:var(--font-body);
-  background:var(--cream-100);
-  color:var(--ink);
-  -webkit-font-smoothing:antialiased;
-  transition:background .25s ease, color .25s ease;
-}
-h1,h2,h3,h4{font-family:var(--font-display);color:var(--ink);margin:0 0 4px;}
-a{color:inherit;}
-button{font-family:var(--font-body);cursor:pointer;}
-::selection{background:var(--caramel-500);color:#fff;}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{background:var(--cream-100); color:var(--coffee-900); min-height:100vh;}
+button{font-family:inherit; cursor:pointer; border:none;}
+input,select,textarea{font-family:inherit;}
+::-webkit-scrollbar{width:8px; height:8px;}
+::-webkit-scrollbar-thumb{background:var(--coffee-300); border-radius:8px;}
 
-/* ---------- Layout shell ---------- */
-.app-shell{display:flex;min-height:100vh;}
-
-.sidebar{
-  width:var(--sidebar-w);
-  background:var(--roast-900);
-  color:var(--cream-50);
-  position:fixed;top:0;left:0;bottom:0;
-  display:flex;flex-direction:column;
-  z-index:40;
-  transition:transform .25s ease;
+/* ---------- LOGIN ---------- */
+#loginScreen{
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(160deg,var(--coffee-900),var(--coffee-700) 60%,var(--coffee-500));
+  padding:20px;
 }
-.sidebar-brand{
-  padding:22px 20px 18px;
-  border-bottom:1px solid rgba(255,255,255,0.08);
-  display:flex;align-items:center;gap:10px;
+.login-card{
+  background:var(--cream-50); border-radius:16px; padding:40px 32px; width:100%; max-width:380px;
+  box-shadow:0 20px 50px rgba(0,0,0,0.35); text-align:center;
 }
-.brand-mark{
-  width:38px;height:38px;border-radius:10px;
-  background:linear-gradient(145deg,var(--caramel-500),var(--coffee-600));
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--font-display);font-weight:700;color:#fff;font-size:16px;
-  flex-shrink:0;
+.login-card .brand-mark{
+  width:56px; height:56px; border-radius:50%; background:var(--coffee-700); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:26px; margin:0 auto 14px;
 }
-.brand-text{line-height:1.15;}
-.brand-text .co{font-family:var(--font-display);font-size:14.5px;font-weight:600;color:#fff;}
-.brand-text .dept{font-size:11px;color:var(--caramel-500);letter-spacing:.04em;text-transform:uppercase;}
-
-.nav-list{list-style:none;margin:0;padding:14px 10px;flex:1;overflow-y:auto;}
-.nav-item{
-  display:flex;align-items:center;gap:11px;
-  padding:10px 12px;border-radius:10px;margin-bottom:2px;
-  color:rgba(247,241,231,0.72);font-size:13.5px;font-weight:500;
-  cursor:pointer;transition:background .15s ease,color .15s ease;
-  user-select:none;
+.login-card h1{font-size:19px; color:var(--coffee-900); margin-bottom:2px;}
+.login-card p.sub{font-size:12.5px; color:var(--coffee-500); margin-bottom:26px;}
+.field{text-align:left; margin-bottom:16px;}
+.field label{display:block; font-size:12px; font-weight:600; color:var(--coffee-700); margin-bottom:5px; text-transform:uppercase; letter-spacing:.04em;}
+.field input{width:100%; padding:11px 13px; border:1.5px solid var(--coffee-300); border-radius:8px; font-size:14.5px; background:#fff; color:var(--coffee-900);}
+.field input:focus{outline:none; border-color:var(--coffee-700);}
+.btn-primary{
+  width:100%; background:var(--coffee-700); color:#fff; padding:12px; border-radius:8px;
+  font-size:14.5px; font-weight:600; margin-top:6px; transition:background .15s;
 }
-.nav-item:hover{background:rgba(255,255,255,0.06);color:#fff;}
-.nav-item.active{background:var(--caramel-500);color:#fff;}
-.nav-icon{width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;}
-.sidebar-footer{padding:14px 20px;font-size:10.5px;color:rgba(247,241,231,0.4);border-top:1px solid rgba(255,255,255,0.08);}
+.btn-primary:hover{background:var(--coffee-900);}
+.btn-primary:disabled{opacity:.6; cursor:default;}
+#loginError{color:var(--danger); font-size:12.5px; margin-top:12px; min-height:16px;}
+#apiUrlNote{font-size:11px; color:#B0906E; margin-top:18px; line-height:1.5;}
 
-.main-wrap{margin-left:var(--sidebar-w);flex:1;min-width:0;display:flex;flex-direction:column;}
-
-.topbar{
-  position:sticky;top:0;z-index:30;
-  background:var(--cream-50);border-bottom:1px solid var(--line);
-  padding:14px 26px;display:flex;align-items:center;justify-content:space-between;gap:14px;
+/* ---------- APP SHELL ---------- */
+#app{display:none; min-height:100vh; flex-direction:column;}
+header.topbar{
+  background:var(--coffee-900); color:#fff; padding:12px 18px; display:flex; align-items:center;
+  justify-content:space-between; position:sticky; top:0; z-index:20; box-shadow:var(--shadow);
 }
-.topbar h2{font-size:19px;}
-.topbar .sub{font-size:12px;color:var(--coffee-600);font-weight:500;}
-.topbar-actions{display:flex;align-items:center;gap:10px;}
-.icon-btn{
-  width:36px;height:36px;border-radius:10px;border:1px solid var(--line);
-  background:var(--white);display:flex;align-items:center;justify-content:center;
-  font-size:15px;color:var(--ink);
+.topbar .brand{display:flex; align-items:center; gap:10px; font-weight:700; font-size:15px;}
+.topbar .brand .dot{width:10px; height:10px; border-radius:50%; background:var(--coffee-300);}
+.topbar .who{font-size:12px; color:var(--coffee-300); display:flex; align-items:center; gap:10px;}
+.topbar .who button{background:transparent; color:#fff; border:1px solid rgba(255,255,255,.3); padding:6px 12px; border-radius:6px; font-size:12px;}
+
+.layout{display:flex; flex:1; min-height:0;}
+nav.sidebar{
+  width:210px; background:var(--coffee-700); color:var(--cream-100); padding:14px 0; flex-shrink:0;
 }
-.menu-toggle{display:none;}
+nav.sidebar button{
+  display:flex; align-items:center; gap:10px; width:100%; text-align:left; background:transparent;
+  color:var(--cream-100); padding:11px 20px; font-size:13.5px; border-left:3px solid transparent;
+}
+nav.sidebar button.active{background:rgba(255,255,255,.12); border-left-color:var(--coffee-300); font-weight:600;}
+nav.sidebar button:hover{background:rgba(255,255,255,.08);}
 
-.content{padding:24px 26px 60px;max-width:1320px;width:100%;margin:0 auto;}
-.view{display:none;animation:fadeIn .28s ease;}
-.view.active{display:block;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+main.content{flex:1; padding:22px; overflow-x:hidden; min-width:0;}
+.view{display:none;}
+.view.active{display:block; animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
 
-/* ---------- Cards / grid ---------- */
-.grid{display:grid;gap:16px;}
+h2.view-title{font-size:20px; color:var(--coffee-900); margin-bottom:4px;}
+p.view-sub{font-size:13px; color:var(--coffee-500); margin-bottom:20px;}
+
+.card{background:#fff; border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; margin-bottom:18px;}
+.grid{display:grid; gap:16px;}
 .grid-4{grid-template-columns:repeat(4,1fr);}
-.grid-3{grid-template-columns:repeat(3,1fr);}
 .grid-2{grid-template-columns:repeat(2,1fr);}
-@media(max-width:1080px){.grid-4{grid-template-columns:repeat(2,1fr);}.grid-3{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:640px){.grid-4,.grid-3,.grid-2{grid-template-columns:1fr;}}
+@media(max-width:900px){.grid-4{grid-template-columns:repeat(2,1fr);} .grid-2{grid-template-columns:1fr;}}
 
-.card{
-  background:var(--white);border:1px solid var(--line);border-radius:var(--radius);
-  padding:18px 20px;box-shadow:var(--shadow);
-}
-.stat-card{position:relative;overflow:hidden;}
-.stat-card .stat-label{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--coffee-600);font-weight:600;}
-.stat-card .stat-value{font-family:var(--font-display);font-size:32px;font-weight:600;margin-top:6px;}
-.stat-card .stat-bean{
-  position:absolute;right:-6px;top:-6px;width:64px;height:64px;border-radius:50%;
-  background:radial-gradient(circle at 35% 30%, var(--caramel-500), var(--coffee-600));
-  opacity:.14;
-}
-.section-title{display:flex;align-items:center;justify-content:space-between;margin:28px 0 14px;flex-wrap:wrap;gap:10px;}
-.section-title h3{font-size:16px;}
+.stat-card{background:linear-gradient(135deg,var(--coffee-700),var(--coffee-900)); color:#fff; border-radius:var(--radius); padding:18px; box-shadow:var(--shadow);}
+.stat-card .label{font-size:11.5px; opacity:.8; text-transform:uppercase; letter-spacing:.05em;}
+.stat-card .value{font-size:26px; font-weight:700; margin-top:6px;}
+.stat-card.alt{background:linear-gradient(135deg,var(--coffee-300),var(--coffee-500)); color:var(--coffee-900);}
 
-.panel{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:20px;}
-.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
-
-/* ---------- Forms ---------- */
-label{display:block;font-size:12.5px;font-weight:600;color:var(--coffee-600);margin-bottom:5px;}
-input,select,textarea{
-  width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;
-  background:var(--cream-50);color:var(--ink);font-family:var(--font-body);font-size:13.5px;
-}
-input:focus,select:focus,textarea:focus{outline:2px solid var(--caramel-500);outline-offset:1px;}
-.field{margin-bottom:13px;}
-.form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;}
-.checkbox-list{display:flex;flex-wrap:wrap;gap:8px;}
-.check-pill{
-  display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:20px;
-  padding:6px 12px;font-size:13px;background:var(--cream-50);cursor:pointer;
-}
-.check-pill input{width:auto;}
-.check-pill.on{background:var(--caramel-500);color:#fff;border-color:var(--caramel-500);}
-
-/* ---------- Buttons ---------- */
-.btn{
-  display:inline-flex;align-items:center;gap:7px;border:none;border-radius:10px;
-  padding:9px 16px;font-size:13.5px;font-weight:600;transition:transform .1s ease, box-shadow .15s ease;
-}
-.btn:active{transform:scale(.97);}
-.btn-primary{background:var(--coffee-600);color:#fff;}
-.btn-primary:hover{box-shadow:0 4px 12px rgba(111,78,55,.35);}
-.btn-accent{background:var(--caramel-500);color:#fff;}
-.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink);}
-.btn-danger{background:var(--danger);color:#fff;}
-.btn-sm{padding:6px 11px;font-size:12px;border-radius:8px;}
-
-/* ---------- Tables ---------- */
+table{width:100%; border-collapse:collapse; font-size:13px;}
+th,td{padding:9px 10px; text-align:left; border-bottom:1px solid #EEE0CC;}
+th{background:var(--cream-100); color:var(--coffee-700); font-weight:700; font-size:11.5px; text-transform:uppercase; letter-spacing:.03em;}
+tr:hover td{background:#FFFBF3;}
 .table-wrap{overflow-x:auto;}
-table{width:100%;border-collapse:collapse;font-size:13px;}
-th{
-  text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;
-  color:var(--coffee-600);padding:10px 12px;border-bottom:2px solid var(--line);white-space:nowrap;
+
+.badge{display:inline-block; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:600;}
+.badge.Draft{background:#EEE; color:#777;}
+.badge.Submitted{background:#FCEBC9; color:var(--warn);}
+.badge.Approved{background:#E1EBD9; color:var(--ok);}
+.badge.Rejected{background:#F5DAD5; color:var(--danger);}
+
+.btn{padding:8px 14px; border-radius:7px; font-size:12.5px; font-weight:600;}
+.btn-brown{background:var(--coffee-700); color:#fff;}
+.btn-brown:hover{background:var(--coffee-900);}
+.btn-outline{background:#fff; border:1.4px solid var(--coffee-700); color:var(--coffee-700);}
+.btn-sm{padding:5px 10px; font-size:11.5px;}
+.btn-ok{background:var(--ok); color:#fff;}
+.btn-danger{background:var(--danger); color:#fff;}
+
+.form-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:12px;}
+.form-row label{display:block; font-size:11.5px; font-weight:600; color:var(--coffee-700); margin-bottom:4px; text-transform:uppercase;}
+.form-row input,.form-row select,.form-row textarea{width:100%; padding:9px 10px; border:1.4px solid var(--coffee-300); border-radius:7px; font-size:13.5px;}
+
+.line-item{border:1.4px dashed var(--coffee-300); border-radius:10px; padding:14px; margin-bottom:12px; position:relative; background:var(--cream-100);}
+.line-item .remove{position:absolute; top:8px; right:10px; background:transparent; color:var(--danger); font-size:16px; font-weight:700;}
+
+.toast{position:fixed; bottom:20px; right:20px; background:var(--coffee-900); color:#fff; padding:12px 18px; border-radius:8px; font-size:13px; box-shadow:var(--shadow); z-index:100; opacity:0; transform:translateY(10px); transition:all .25s;}
+.toast.show{opacity:1; transform:translateY(0);}
+
+.empty{text-align:center; color:var(--coffee-500); font-size:13px; padding:30px 0;}
+
+.bottom-nav{display:none;}
+@media(max-width:760px){
+  nav.sidebar{display:none;}
+  .bottom-nav{
+    display:flex; position:sticky; bottom:0; background:var(--coffee-900); z-index:20;
+    overflow-x:auto; padding:6px 4px;
+  }
+  .bottom-nav button{flex:0 0 auto; background:transparent; color:var(--cream-100); font-size:11px; padding:8px 12px; border-radius:8px; white-space:nowrap;}
+  .bottom-nav button.active{background:rgba(255,255,255,.15); font-weight:700;}
+  main.content{padding:14px;}
+  .grid-4{grid-template-columns:1fr 1fr;}
 }
-td{padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;}
-tr:hover td{background:var(--cream-50);}
-.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;display:inline-block;}
-.badge-success{background:rgba(62,122,76,.12);color:var(--success);}
-.badge-warn{background:rgba(181,121,30,.14);color:var(--warn);}
-.badge-danger{background:rgba(178,58,46,.12);color:var(--danger);}
-.badge-neutral{background:var(--cream-100);color:var(--coffee-600);}
-
-.table-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:12px;}
-.table-toolbar input,.table-toolbar select{width:auto;min-width:160px;}
-.pagination{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-top:12px;font-size:12.5px;}
-
-/* ---------- Bars (dependency-free charts) ---------- */
-.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-.bar-label{width:170px;font-size:12.5px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.bar-track{flex:1;height:10px;background:var(--cream-100);border-radius:6px;overflow:hidden;}
-.bar-fill{height:100%;background:linear-gradient(90deg,var(--coffee-600),var(--caramel-500));border-radius:6px;}
-.bar-val{width:36px;text-align:right;font-size:12px;font-weight:600;color:var(--coffee-600);}
-
-/* ---------- Toast / Loader ---------- */
-#toastHost{position:fixed;bottom:22px;right:22px;z-index:100;display:flex;flex-direction:column;gap:10px;}
-.toast{
-  background:var(--roast-900);color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;
-  box-shadow:var(--shadow-lg);animation:slideIn .25s ease;min-width:220px;
-}
-.toast.success{background:var(--success);}
-.toast.error{background:var(--danger);}
-@keyframes slideIn{from{opacity:0;transform:translateX(30px);}to{opacity:1;transform:translateX(0);}}
-
-#loadingOverlay{
-  position:fixed;inset:0;background:rgba(36,26,18,0.35);display:none;
-  align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(1px);
-}
-#loadingOverlay.show{display:flex;}
-.spinner{width:42px;height:42px;border-radius:50%;border:4px solid rgba(255,255,255,.35);border-top-color:#fff;animation:spin .8s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
-
-.empty-state{text-align:center;padding:40px 20px;color:var(--coffee-600);}
-.empty-state .em-icon{font-size:34px;margin-bottom:8px;}
-
-/* ---------- Responsive ---------- */
-@media(max-width:900px){
-  .sidebar{transform:translateX(-100%);}
-  .sidebar.open{transform:translateX(0);}
-  .main-wrap{margin-left:0;}
-  .menu-toggle{display:flex;}
-}
+canvas{max-height:260px;}
 </style>
 </head>
-<body data-theme="light">
+<body>
 
-<div class="app-shell">
-
-  <!-- ============================= SIDEBAR ============================= -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-mark">SN</div>
-      <div class="brand-text">
-        <div class="co" id="brandCompany">Sri Narasus Coffee Co.</div>
-        <div class="dept" id="brandDept">Stores Department</div>
-      </div>
+<!-- ============ LOGIN ============ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="brand-mark">☕</div>
+    <h1>Stores KPI &amp; Appraisal</h1>
+    <p class="sub">Sri Narasu's Coffee Company Pvt Ltd &mdash; Stores Department</p>
+    <div class="field">
+      <label>User ID</label>
+      <input id="loginUserId" type="text" autocomplete="username" placeholder="e.g. sakthivel">
     </div>
-    <ul class="nav-list" id="navList">
-      <li class="nav-item active" data-view="dashboard"><span class="nav-icon">◆</span> Dashboard</li>
-      <li class="nav-item" data-view="register"><span class="nav-icon">✎</span> Working Register</li>
-      <li class="nav-item" data-view="attendance"><span class="nav-icon">✓</span> Attendance</li>
-      <li class="nav-item" data-view="staff"><span class="nav-icon">☰</span> Staff Master</li>
-      <li class="nav-item" data-view="sections"><span class="nav-icon">▤</span> Section Master</li>
-      <li class="nav-item" data-view="activities"><span class="nav-icon">⚙</span> Activity &amp; Workflow</li>
-      <li class="nav-item" data-view="appraisal"><span class="nav-icon">★</span> Staff Appraisal</li>
-      <li class="nav-item" data-view="reports"><span class="nav-icon">▦</span> Reports</li>
-      <li class="nav-item" data-view="settings"><span class="nav-icon">◎</span> Settings</li>
-    </ul>
-    <div class="sidebar-footer" id="sidebarFooter">v1.0.0 · Stores Web App</div>
-  </aside>
-
-  <!-- ============================= MAIN ============================= -->
-  <div class="main-wrap">
-    <div class="topbar">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <button class="icon-btn menu-toggle" id="menuToggle">☰</button>
-        <div>
-          <h2 id="viewTitle">Dashboard</h2>
-          <div class="sub" id="viewSub">Today's overview at a glance</div>
-        </div>
-      </div>
-      <div class="topbar-actions">
-        <button class="icon-btn" id="themeToggle" title="Toggle theme">☾</button>
-      </div>
+    <div class="field">
+      <label>Password</label>
+      <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••">
     </div>
-
-    <div class="content">
-
-      <!-- ===================== DASHBOARD ===================== -->
-      <section class="view active" id="view-dashboard">
-        <div class="grid grid-4">
-          <div class="card stat-card"><div class="stat-bean"></div><div class="stat-label">Total Staff</div><div class="stat-value" id="statTotalStaff">0</div></div>
-          <div class="card stat-card"><div class="stat-bean"></div><div class="stat-label">Today's Activities</div><div class="stat-value" id="statTodayActivities">0</div></div>
-          <div class="card stat-card"><div class="stat-bean"></div><div class="stat-label">Pending Work</div><div class="stat-value" id="statPending">0</div></div>
-          <div class="card stat-card"><div class="stat-bean"></div><div class="stat-label">Present Today</div><div class="stat-value" id="statPresent">0</div></div>
-        </div>
-
-        <div class="grid grid-2" style="margin-top:16px;">
-          <div class="panel">
-            <div class="panel-head"><h3>Activity-wise Entries</h3></div>
-            <div id="chartActivity"></div>
-          </div>
-          <div class="panel">
-            <div class="panel-head"><h3>Staff-wise Entries</h3></div>
-            <div id="chartStaff"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===================== WORKING REGISTER ===================== -->
-      <section class="view" id="view-register">
-        <div class="panel">
-          <div class="panel-head"><h3>New Daily Entry</h3><span style="font-size:12px;color:var(--coffee-600);">One activity → multiple workflows → multiple staff</span></div>
-          <div class="form-row">
-            <div class="field"><label>Date</label><input type="date" id="regDate"></div>
-            <div class="field"><label>Activity</label><select id="regActivity"></select></div>
-          </div>
-          <div class="field"><label>Workflow(s)</label><div class="checkbox-list" id="regWorkflows"></div></div>
-          <div class="field"><label>Staff</label><div class="checkbox-list" id="regStaff"></div></div>
-          <div class="form-row">
-            <div class="field"><label>Quantity (applied to each selected row)</label><input type="number" id="regQty" placeholder="e.g. 20"></div>
-            <div class="field"><label>Completion Status</label><select id="regStatus"><option>Pending</option><option>In Progress</option><option>Completed</option></select></div>
-          </div>
-          <div class="field"><label>Remarks</label><textarea id="regRemarks" rows="2" placeholder="Optional remarks"></textarea></div>
-          <button class="btn btn-primary" id="regSubmit">Save Entry</button>
-        </div>
-
-        <div class="panel">
-          <div class="table-toolbar">
-            <h3 style="margin:0;">Register Entries</h3>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <input type="text" id="regSearch" placeholder="Search...">
-              <button class="btn btn-ghost btn-sm" id="regExport">Export CSV</button>
-            </div>
-          </div>
-          <div class="table-wrap"><table id="regTable"><thead></thead><tbody></tbody></table></div>
-          <div class="pagination" id="regPagination"></div>
-        </div>
-      </section>
-
-      <!-- ===================== ATTENDANCE ===================== -->
-      <section class="view" id="view-attendance">
-        <div class="panel">
-          <div class="panel-head"><h3>Mark Attendance</h3><input type="date" id="attDate" style="width:auto;"></div>
-          <div class="table-wrap"><table id="attTable"><thead><tr><th>Staff</th><th>Status</th><th>Remarks</th></tr></thead><tbody></tbody></table></div>
-          <button class="btn btn-primary" id="attSubmit" style="margin-top:12px;">Save Attendance</button>
-        </div>
-        <div class="panel">
-          <h3>Attendance History</h3>
-          <div class="table-wrap"><table id="attHistTable"><thead></thead><tbody></tbody></table></div>
-        </div>
-      </section>
-
-      <!-- ===================== STAFF MASTER ===================== -->
-      <section class="view" id="view-staff">
-        <div class="panel">
-          <div class="panel-head"><h3 id="staffFormTitle">Add Staff</h3></div>
-          <input type="hidden" id="staffId">
-          <div class="form-row">
-            <div class="field"><label>Name</label><input id="staffName"></div>
-            <div class="field"><label>Designation</label><input id="staffDesignation"></div>
-            <div class="field"><label>Section</label><select id="staffSection"></select></div>
-          </div>
-          <div class="form-row">
-            <div class="field"><label>Reporting Manager</label><input id="staffManager"></div>
-            <div class="field"><label>Role</label><select id="staffRole"><option>Staff</option><option>Section Incharge</option><option>Assistant Manager</option><option>Stores Manager</option></select></div>
-            <div class="field"><label>Status</label><select id="staffStatus"><option>Active</option><option>Inactive</option></select></div>
-          </div>
-          <div class="form-row">
-            <div class="field"><label>Mobile (optional)</label><input id="staffMobile"></div>
-            <div class="field"><label>Joining Date</label><input type="date" id="staffJoining"></div>
-          </div>
-          <button class="btn btn-primary" id="staffSubmit">Save Staff</button>
-          <button class="btn btn-ghost" id="staffCancel" style="display:none;">Cancel Edit</button>
-        </div>
-        <div class="panel">
-          <div class="table-toolbar"><h3 style="margin:0;">Staff Directory</h3><input type="text" id="staffSearch" placeholder="Search staff..."></div>
-          <div class="table-wrap"><table id="staffTable"><thead></thead><tbody></tbody></table></div>
-        </div>
-      </section>
-
-      <!-- ===================== SECTION MASTER ===================== -->
-      <section class="view" id="view-sections">
-        <div class="panel">
-          <div class="panel-head"><h3>Add Section</h3></div>
-          <div class="form-row">
-            <div class="field"><label>Section Name</label><input id="sectionName"></div>
-            <div class="field"><label>Status</label><select id="sectionStatus"><option>Active</option><option>Inactive</option></select></div>
-          </div>
-          <button class="btn btn-primary" id="sectionSubmit">Save Section</button>
-        </div>
-        <div class="panel"><div class="table-wrap"><table id="sectionTable"><thead></thead><tbody></tbody></table></div></div>
-      </section>
-
-      <!-- ===================== ACTIVITY & WORKFLOW MASTER ===================== -->
-      <section class="view" id="view-activities">
-        <div class="grid grid-2">
-          <div class="panel">
-            <div class="panel-head"><h3>Add Activity</h3></div>
-            <div class="field"><label>Activity Name</label><input id="activityName"></div>
-            <div class="field"><label>Status</label><select id="activityStatus"><option>Active</option><option>Inactive</option></select></div>
-            <button class="btn btn-primary" id="activitySubmit">Save Activity</button>
-            <div class="table-wrap" style="margin-top:14px;"><table id="activityTable"><thead></thead><tbody></tbody></table></div>
-          </div>
-          <div class="panel">
-            <div class="panel-head"><h3>Add Workflow</h3></div>
-            <div class="field"><label>Activity</label><select id="wfActivity"></select></div>
-            <div class="field"><label>Workflow Name</label><input id="wfName"></div>
-            <div class="form-row">
-              <div class="field"><label>KPI</label><input id="wfKpi"></div>
-              <div class="field"><label>Unit</label><select id="wfUnit"></select></div>
-            </div>
-            <div class="form-row">
-              <div class="field"><label>Expected Output</label><input id="wfExpected" type="number"></div>
-              <div class="field"><label>Weightage</label><input id="wfWeightage" type="number"></div>
-              <div class="field"><label>Max Score</label><input id="wfMaxScore" type="number"></div>
-            </div>
-            <div class="field"><label>Remarks</label><input id="wfRemarks"></div>
-            <button class="btn btn-primary" id="wfSubmit">Save Workflow</button>
-            <div class="table-wrap" style="margin-top:14px;"><table id="wfTable"><thead></thead><tbody></tbody></table></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===================== APPRAISAL ===================== -->
-      <section class="view" id="view-appraisal">
-        <div class="panel">
-          <div class="panel-head"><h3>Compute Appraisal</h3></div>
-          <div class="form-row">
-            <div class="field"><label>Staff</label><select id="apStaff"></select></div>
-            <div class="field"><label>Period (e.g. Jul-2026)</label><input id="apPeriod" placeholder="Jul-2026"></div>
-          </div>
-          <button class="btn btn-accent" id="apCompute">Compute Appraisal</button>
-        </div>
-        <div class="panel" id="apResultPanel" style="display:none;">
-          <h3>Result</h3>
-          <div class="grid grid-4" id="apResultCards"></div>
-        </div>
-        <div class="panel">
-          <h3>Appraisal History</h3>
-          <div class="table-wrap"><table id="apTable"><thead></thead><tbody></tbody></table></div>
-        </div>
-      </section>
-
-      <!-- ===================== REPORTS ===================== -->
-      <section class="view" id="view-reports">
-        <div class="panel">
-          <div class="panel-head"><h3>Report Filters</h3></div>
-          <div class="form-row">
-            <div class="field"><label>Report Type</label>
-              <select id="repType">
-                <option value="register">Working Register</option>
-                <option value="attendance">Attendance</option>
-                <option value="appraisal">Appraisal</option>
-              </select>
-            </div>
-            <div class="field"><label>From</label><input type="date" id="repFrom"></div>
-            <div class="field"><label>To</label><input type="date" id="repTo"></div>
-            <div class="field"><label>Staff</label><select id="repStaff"><option value="">All</option></select></div>
-          </div>
-          <button class="btn btn-primary" id="repRun">Generate Report</button>
-          <button class="btn btn-ghost" id="repExport">Export CSV</button>
-        </div>
-        <div class="panel"><div class="table-wrap"><table id="repTable"><thead></thead><tbody></tbody></table></div></div>
-      </section>
-
-      <!-- ===================== SETTINGS ===================== -->
-      <section class="view" id="view-settings">
-        <div class="panel">
-          <div class="panel-head"><h3>Application Settings</h3></div>
-          <div class="form-row">
-            <div class="field"><label>Company Name</label><input id="setCompanyName"></div>
-            <div class="field"><label>Department</label><input id="setDepartment"></div>
-            <div class="field"><label>Application Title</label><input id="setAppTitle"></div>
-          </div>
-          <div class="form-row">
-            <div class="field"><label>Theme Color</label><input type="color" id="setThemeColor"></div>
-            <div class="field"><label>Financial Year</label><input id="setFinancialYear"></div>
-            <div class="field"><label>Logo URL</label><input id="setLogoUrl" placeholder="https://..."></div>
-          </div>
-          <div class="form-row">
-            <div class="field"><label>Company Address</label><input id="setAddress"></div>
-            <div class="field"><label>Footer Text</label><input id="setFooter"></div>
-          </div>
-          <button class="btn btn-primary" id="setSave">Save Settings</button>
-        </div>
-        <div class="panel">
-          <div class="panel-head"><h3>Apps Script Connection</h3></div>
-          <div class="field"><label>Web App URL (paste after deploying Code.gs)</label><input id="setApiUrl" placeholder="https://script.google.com/macros/s/XXXX/exec"></div>
-          <button class="btn btn-accent" id="setApiSave">Save Connection</button>
-          <p style="font-size:12px;color:var(--coffee-600);margin-top:10px;">See SETUP.md for step-by-step deployment instructions.</p>
-        </div>
-      </section>
-
-    </div>
+    <button class="btn-primary" id="loginBtn" onclick="doLogin()">Log In</button>
+    <div id="loginError"></div>
+    <div id="apiUrlNote">Not connected to a backend yet — see SETUP.md to deploy your Apps Script Web App and paste its URL into config.js / the API_URL constant below.</div>
   </div>
 </div>
 
-<div id="toastHost"></div>
-<div id="loadingOverlay"><div class="spinner"></div></div>
+<!-- ============ APP ============ -->
+<div id="app">
+  <header class="topbar">
+    <div class="brand"><span class="dot"></span> Stores KPI &amp; Appraisal</div>
+    <div class="who">
+      <span id="whoLabel"></span>
+      <button onclick="logout()">Log Out</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar" id="sidebar"></nav>
+
+    <main class="content">
+
+      <!-- DASHBOARD -->
+      <section class="view" id="view-dashboard">
+        <h2 class="view-title">Dashboard</h2>
+        <p class="view-sub">Current month performance snapshot</p>
+        <div class="grid grid-4" id="dashStats"></div>
+        <div class="grid grid-2">
+          <div class="card"><h3 style="margin-bottom:10px;font-size:14px;color:var(--coffee-700)">KPI Score by Staff</h3><canvas id="chartStaff"></canvas></div>
+          <div class="card"><h3 style="margin-bottom:10px;font-size:14px;color:var(--coffee-700)">KPI Score by Activity</h3><canvas id="chartActivity"></canvas></div>
+        </div>
+      </section>
+
+      <!-- WORKING REGISTER -->
+      <section class="view" id="view-register">
+        <h2 class="view-title">Working Register</h2>
+        <p class="view-sub">Record today's activities and workflows. A day can include multiple workflows.</p>
+        <div class="card">
+          <div class="form-row">
+            <div><label>Date</label><input type="date" id="regDate"></div>
+          </div>
+          <div id="lineItems"></div>
+          <button class="btn btn-outline" onclick="addLineItem()">+ Add Workflow</button>
+          <div style="margin-top:16px;">
+            <button class="btn btn-brown" onclick="submitWorkingEntries()">Save &amp; Submit for Approval</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:10px;font-size:14px;color:var(--coffee-700)">Recent Entries</h3>
+          <div class="table-wrap"><table id="registerTable"><thead><tr>
+            <th>Date</th><th>Staff</th><th>Activity</th><th>Workflow</th><th>Target</th><th>Actual</th><th>Ach %</th><th>KPI Score</th><th>Status</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- APPROVALS (Manager only) -->
+      <section class="view" id="view-approvals">
+        <h2 class="view-title">Pending Approvals</h2>
+        <p class="view-sub">Review and approve submitted working register entries</p>
+        <div id="approvalsList"></div>
+      </section>
+
+      <!-- ATTENDANCE -->
+      <section class="view" id="view-attendance">
+        <h2 class="view-title">Attendance</h2>
+        <p class="view-sub">Mark daily attendance</p>
+        <div class="card">
+          <div class="form-row">
+            <div><label>Date</label><input type="date" id="attDate"></div>
+            <div><label>Status</label>
+              <select id="attStatus"><option>Present</option><option>Absent</option><option>Half Day</option><option>Permission</option></select>
+            </div>
+            <div><label>Permission Hours</label><input type="number" id="attPermHrs" min="0" step="0.5" value="0"></div>
+          </div>
+          <div class="form-row"><div style="grid-column:1/-1"><label>Remarks</label><input type="text" id="attRemarks"></div></div>
+          <button class="btn btn-brown" onclick="markAttendance()">Save Attendance</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap"><table id="attendanceTable"><thead><tr><th>Date</th><th>Staff</th><th>Status</th><th>Permission Hrs</th><th>Remarks</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- LEAVE -->
+      <section class="view" id="view-leave">
+        <h2 class="view-title">Leave</h2>
+        <p class="view-sub">Apply for leave and track status</p>
+        <div class="card">
+          <div class="form-row">
+            <div><label>From</label><input type="date" id="lvFrom"></div>
+            <div><label>To</label><input type="date" id="lvTo"></div>
+            <div><label>Type</label><select id="lvType"><option>Casual</option><option>Sick</option><option>Earned</option><option>Unpaid</option></select></div>
+          </div>
+          <div class="form-row"><div style="grid-column:1/-1"><label>Reason</label><input type="text" id="lvReason"></div></div>
+          <button class="btn btn-brown" onclick="applyLeave()">Apply Leave</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap"><table id="leaveTable"><thead><tr><th>Staff</th><th>From</th><th>To</th><th>Type</th><th>Reason</th><th>Status</th><th></th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- STAFF APPRAISAL -->
+      <section class="view" id="view-appraisal">
+        <h2 class="view-title">Staff Appraisal</h2>
+        <p class="view-sub">KPI-based appraisal for a custom date range</p>
+        <div class="card">
+          <div class="form-row">
+            <div><label>From</label><input type="date" id="apprFrom"></div>
+            <div><label>To</label><input type="date" id="apprTo"></div>
+            <div style="align-self:end;"><button class="btn btn-brown" onclick="loadAppraisal()">Run Appraisal</button></div>
+          </div>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <h3 style="font-size:14px;color:var(--coffee-700)">Results</h3>
+            <button class="btn btn-outline btn-sm" onclick="exportAppraisal()">Export .xlsx</button>
+          </div>
+          <div class="table-wrap"><table id="appraisalTable"><thead><tr>
+            <th>Staff</th><th>Designation</th><th>Section</th><th>Entries</th><th>KPI Score</th><th>Max Possible</th><th>Overall %</th><th>Rating</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- REPORTS -->
+      <section class="view" id="view-reports">
+        <h2 class="view-title">Reports</h2>
+        <p class="view-sub">Staff-wise, Activity-wise, Workflow-wise and Section-wise reports for a custom date range</p>
+        <div class="card">
+          <div class="form-row">
+            <div><label>From</label><input type="date" id="repFrom"></div>
+            <div><label>To</label><input type="date" id="repTo"></div>
+            <div><label>Group By</label>
+              <select id="repGroupBy"><option value="Staff Name">Staff</option><option value="Activity Name">Activity</option><option value="Workflow Name">Workflow</option></select>
+            </div>
+            <div style="align-self:end;"><button class="btn btn-brown" onclick="runReport()">Run Report</button></div>
+          </div>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <h3 style="font-size:14px;color:var(--coffee-700)">Results</h3>
+            <button class="btn btn-outline btn-sm" onclick="exportReport()">Export .xlsx</button>
+          </div>
+          <div class="table-wrap"><table id="reportTable"><thead><tr><th>Group</th><th>Entries</th><th>Total Target</th><th>Total Actual</th><th>Avg Achievement %</th><th>Total KPI Score</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- MASTERS (Manager only) -->
+      <section class="view" id="view-masters">
+        <h2 class="view-title">Master Data</h2>
+        <p class="view-sub">Staff, Activities and Workflows (read-only view — edit directly in Google Sheets for now)</p>
+        <div class="card">
+          <h3 style="margin-bottom:10px;font-size:14px;color:var(--coffee-700)">Staff Master</h3>
+          <div class="table-wrap"><table id="staffTable"><thead><tr><th>ID</th><th>Name</th><th>Designation</th><th>Section</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:10px;font-size:14px;color:var(--coffee-700)">Activity &amp; Workflow Master</h3>
+          <div class="table-wrap"><table id="workflowTable"><thead><tr><th>Activity</th><th>Workflow</th><th>KPI</th><th>Unit</th><th>Target</th><th>Weightage %</th><th>Max Score</th><th>Expected Output</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <nav class="bottom-nav" id="bottomNav"></nav>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
-/* =========================================================================
-   CONFIGURATION LAYER
-   ========================================================================= */
-const CONFIG = {
-  // Paste your deployed Apps Script Web App /exec URL here, or set it once
-  // via Settings → Apps Script Connection (stored in the browser only).
-  APPS_SCRIPT_URL: localStorage.getItem('apiUrl') || 'https://script.google.com/macros/s/AKfycbxg90EtreMljNU01mua7d7jjlZMJjxkrnbwLJ_1qfLtx-rpCt1BRxRxYfTkT0qUvgpFgQ/exec',
-  PAGE_SIZE: 10
-};
-
-/* =========================================================================
-   STATE LAYER
-   ========================================================================= */
-const STATE = {
-  config:{}, staff:[], sections:[], activities:[], workflows:[],
-  register:[], attendance:[], appraisal:[],
-  regPage:1
-};
-
-/* =========================================================================
-   UTILITY LAYER
-   ========================================================================= */
-const $ = (id) => document.getElementById(id);
-function showLoading(v){ $('loadingOverlay').classList.toggle('show', v); }
-function toast(msg, type){
-  const host = $('toastHost');
-  const el = document.createElement('div');
-  el.className = 'toast' + (type ? ' ' + type : '');
-  el.textContent = msg;
-  host.appendChild(el);
-  setTimeout(()=>{ el.remove(); }, 3200);
-}
-function todayISO(){ return new Date().toISOString().slice(0,10); }
-function escapeHtml(s){ return (s===undefined||s===null) ? '' : String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-function byId(list, id, idField){ return (list||[]).find(x => x[idField] === id); }
-function nameOf(list, id, idField, nameField){ const m = byId(list, id, idField); return m ? m[nameField] : id; }
-function toCSV(rows){
-  if(!rows || !rows.length) return '';
-  const headers = Object.keys(rows[0]);
-  const lines = [headers.join(',')];
-  rows.forEach(r => lines.push(headers.map(h => '"' + String(r[h]===undefined?'':r[h]).replace(/"/g,'""') + '"').join(',')));
-  return lines.join('\n');
-}
-function downloadCSV(rows, filename){
-  const csv = toCSV(rows);
-  if(!csv){ toast('Nothing to export', 'error'); return; }
-  const blob = new Blob([csv], {type:'text/csv'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = filename;
-  a.click();
-}
-
-/* =========================================================================
-   API LAYER
-   Apps Script web apps accept simple (non-preflighted) requests from any
-   origin, which is what makes the GitHub Pages -> Apps Script call work
-   without extra CORS configuration. GET reads via query string; POST
-   writes via a text/plain JSON body (keeps the request "simple").
-   ========================================================================= */
-async function apiGet(action, params){
-  const url = new URL(CONFIG.APPS_SCRIPT_URL);
-  url.searchParams.set('action', action);
-  Object.keys(params||{}).forEach(k => { if(params[k]!==undefined && params[k]!==null && params[k]!=='') url.searchParams.set(k, params[k]); });
-  const res = await fetch(url.toString());
-  return res.json();
-}
-async function apiPost(action, data){
-  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
-    method:'POST',
-    headers:{ 'Content-Type':'text/plain;charset=utf-8' },
-    body: JSON.stringify(Object.assign({action}, data))
-  });
-  return res.json();
-}
-async function call(fn, ...args){
-  showLoading(true);
-  try{
-    const result = await fn(...args);
-    if(result && result.success === false) toast(result.error || 'Something went wrong', 'error');
-    return result;
-  }catch(err){
-    toast('Connection error — check your Apps Script URL in Settings', 'error');
-    return { success:false, error:err.message };
-  }finally{
-    showLoading(false);
-  }
-}
-
-/* =========================================================================
-   NAVIGATION
-   ========================================================================= */
-const VIEW_TITLES = {
-  dashboard:['Dashboard',"Today's overview at a glance"],
-  register:['Working Register','Log daily activity, workflow & staff output'],
-  attendance:['Attendance','Mark and review daily attendance'],
-  staff:['Staff Master','Manage the stores team directory'],
-  sections:['Section Master','Manage department sections'],
-  activities:['Activity & Workflow Master','Define activities, workflows & KPIs'],
-  appraisal:['Staff Appraisal','Weighted performance scoring & grading'],
-  reports:['Reports','Filter and export operational data'],
-  settings:['Settings','Branding, theme & Apps Script connection']
-};
-document.querySelectorAll('.nav-item').forEach(item=>{
-  item.addEventListener('click', ()=>{
-    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-    item.classList.add('active');
-    const v = item.dataset.view;
-    document.querySelectorAll('.view').forEach(sec=>sec.classList.remove('active'));
-    $('view-'+v).classList.add('active');
-    $('viewTitle').textContent = VIEW_TITLES[v][0];
-    $('viewSub').textContent = VIEW_TITLES[v][1];
-    $('sidebar').classList.remove('open');
-    if(v==='dashboard') renderDashboard();
-    if(v==='reports') populateReportFilters();
-  });
-});
-$('menuToggle').addEventListener('click', ()=> $('sidebar').classList.toggle('open'));
-$('themeToggle').addEventListener('click', ()=>{
-  const html = document.documentElement;
-  const dark = html.getAttribute('data-theme') === 'dark';
-  html.setAttribute('data-theme', dark ? 'light' : 'dark');
-  $('themeToggle').textContent = dark ? '☾' : '☀';
-});
-
-/* =========================================================================
-   INITIAL LOAD — pulls every master in one call for a fast, lightweight boot
-   ========================================================================= */
-async function loadMasters(){
-  const res = await call(apiGet, 'getMasters');
-  if(!res || !res.success) return;
-  STATE.config = {}; (res.data.config||[]).forEach(r => STATE.config[r.Key] = r.Value);
-  STATE.staff = res.data.staff || [];
-  STATE.sections = res.data.sections || [];
-  STATE.activities = res.data.activities || [];
-  STATE.workflows = res.data.workflows || [];
-  applyBranding();
-  populateAllSelects();
-  renderStaffTable();
-  renderSectionTable();
-  renderActivityTable();
-  renderWorkflowTable();
-}
-
-function applyBranding(){
-  const c = STATE.config;
-  if(c.CompanyName){ $('brandCompany').textContent = c.CompanyName; document.title = c.CompanyName + ' — Stores'; }
-  if(c.Department) $('brandDept').textContent = c.Department;
-  if(c.AppVersion) $('sidebarFooter').textContent = 'v' + c.AppVersion + ' · Stores Web App';
-  if(c.ThemeColor) document.documentElement.style.setProperty('--coffee-600', c.ThemeColor);
-}
-
-const UNIT_OPTIONS = ['Bills','Items','Kg','Bundles','Lines','Loads','Reports','Pallets','DC','Gate Pass','Count','Days','Hours','Area','Towns','Sections'];
-
-function populateAllSelects(){
-  // Sections
-  const sectionOpts = STATE.sections.map(s=>`<option value="${s.SectionID}">${escapeHtml(s.SectionName)}</option>`).join('');
-  $('staffSection').innerHTML = sectionOpts;
-  // Activities
-  const activityOpts = STATE.activities.map(a=>`<option value="${a.ActivityID}">${escapeHtml(a.ActivityName)}</option>`).join('');
-  $('regActivity').innerHTML = activityOpts;
-  $('wfActivity').innerHTML = activityOpts;
-  // Units
-  $('wfUnit').innerHTML = UNIT_OPTIONS.map(u=>`<option>${u}</option>`).join('');
-  // Staff checkboxes for register
-  $('regStaff').innerHTML = STATE.staff.map(s=>`
-    <label class="check-pill"><input type="checkbox" value="${s.StaffID}"> ${escapeHtml(s.Name)}</label>`).join('');
-  // Appraisal + report staff dropdowns
-  const staffOpts = STATE.staff.map(s=>`<option value="${s.StaffID}">${escapeHtml(s.Name)}</option>`).join('');
-  $('apStaff').innerHTML = staffOpts;
-  $('repStaff').innerHTML = '<option value="">All</option>' + staffOpts;
-
-  renderWorkflowCheckboxes();
-  $('regDate').value = todayISO();
-  $('attDate').value = todayISO();
-
-  // settings fields
-  $('setCompanyName').value = STATE.config.CompanyName || '';
-  $('setDepartment').value = STATE.config.Department || '';
-  $('setAppTitle').value = STATE.config.AppTitle || '';
-  $('setThemeColor').value = STATE.config.ThemeColor || '#6F4E37';
-  $('setFinancialYear').value = STATE.config.FinancialYear || '';
-  $('setLogoUrl').value = STATE.config.LogoUrl || '';
-  $('setAddress').value = STATE.config.CompanyAddress || '';
-  $('setFooter').value = STATE.config.FooterText || '';
-  $('setApiUrl').value = (CONFIG.APPS_SCRIPT_URL === 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') ? '' : CONFIG.APPS_SCRIPT_URL;
-}
-
-function renderWorkflowCheckboxes(){
-  const activityId = $('regActivity').value;
-  const wfs = STATE.workflows.filter(w => w.ActivityID === activityId);
-  $('regWorkflows').innerHTML = wfs.length ? wfs.map(w=>`
-    <label class="check-pill"><input type="checkbox" value="${w.WorkflowID}"> ${escapeHtml(w.WorkflowName)}</label>`).join('')
-    : '<span style="font-size:12px;color:var(--coffee-600);">No workflows defined for this activity yet — add one in Activity &amp; Workflow Master.</span>';
-}
-$('regActivity').addEventListener('change', renderWorkflowCheckboxes);
-document.addEventListener('click', (e)=>{
-  if(e.target.closest('.check-pill')){
-    const pill = e.target.closest('.check-pill');
-    const cb = pill.querySelector('input');
-    setTimeout(()=> pill.classList.toggle('on', cb.checked), 0);
-  }
-});
-
-/* =========================================================================
-   DASHBOARD
-   ========================================================================= */
-async function renderDashboard(){
-  const res = await call(apiGet, 'getDashboard');
-  if(!res || !res.success) return;
-  const d = res.data || {};
-
-d.activityWise = d.activityWise || {};
-d.staffWise = d.staffWise || {};
-  $('statTotalStaff').textContent = d.totalStaff;
-  $('statTodayActivities').textContent = d.todaysActivities;
-  $('statPending').textContent = d.pendingWork;
-  $('statPresent').textContent = d.presentToday + '/' + d.totalStaffMarked;
-
-  renderBarChart('chartActivity', d.activityWise, (id)=> nameOf(STATE.activities, id, 'ActivityID', 'ActivityName'));
-  renderBarChart('chartStaff', d.staffWise, (id)=> nameOf(STATE.staff, id, 'StaffID', 'Name'));
-}
-function renderBarChart(containerId, dataObj, labelFn){
-  const entries = Object.entries(dataObj || {});
-  const el = $(containerId);
-  if(!entries.length){ el.innerHTML = '<div class="empty-state"><div class="em-icon">☕</div>No data yet</div>'; return; }
-  const max = Math.max(...entries.map(e=>e[1]));
-  el.innerHTML = entries.map(([id,val])=>`
-    <div class="bar-row">
-      <div class="bar-label">${escapeHtml(labelFn(id))}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${Math.round((val/max)*100)}%"></div></div>
-      <div class="bar-val">${val}</div>
-    </div>`).join('');
-}
-
-/* =========================================================================
-   WORKING REGISTER
-   ========================================================================= */
-$('regSubmit').addEventListener('click', async ()=>{
-  const date = $('regDate').value;
-  const activityId = $('regActivity').value;
-  const workflowIds = [...document.querySelectorAll('#regWorkflows input:checked')].map(c=>c.value);
-  const staffIds = [...document.querySelectorAll('#regStaff input:checked')].map(c=>c.value);
-  const qty = $('regQty').value;
-  const status = $('regStatus').value;
-  const remarks = $('regRemarks').value;
-
-  if(!date || !activityId || !workflowIds.length || !staffIds.length){
-    toast('Please select date, activity, at least one workflow and one staff', 'error'); return;
-  }
-  const entries = [];
-  workflowIds.forEach(wid => staffIds.forEach(sid => {
-    entries.push({ Date:date, StaffID:sid, ActivityID:activityId, WorkflowID:wid, Quantity:qty, Remarks:remarks, Status:status });
-  }));
-  const res = await call(apiPost, 'saveRegisterEntry', { entries });
-  if(res && res.success){
-    toast(`Saved ${res.ids.length} register entr${res.ids.length===1?'y':'ies'}`, 'success');
-    $('regQty').value=''; $('regRemarks').value='';
-    document.querySelectorAll('#regWorkflows input, #regStaff input').forEach(c=>{c.checked=false; c.closest('.check-pill').classList.remove('on');});
-    loadRegister();
-  }
-});
-async function loadRegister(){
-  const res = await call(apiGet, 'getRegister');
-  if(res && res.success){ STATE.register = res.data; renderRegisterTable(); }
-}
-function renderRegisterTable(){
-  const search = ($('regSearch').value||'').toLowerCase();
-  let rows = STATE.register.map(r => Object.assign({}, r, {
-    StaffName: nameOf(STATE.staff, r.StaffID, 'StaffID', 'Name'),
-    ActivityName: nameOf(STATE.activities, r.ActivityID, 'ActivityID', 'ActivityName'),
-    WorkflowName: nameOf(STATE.workflows, r.WorkflowID, 'WorkflowID', 'WorkflowName')
-  }));
-  if(search) rows = rows.filter(r => JSON.stringify(r).toLowerCase().includes(search));
-  rows.sort((a,b)=> new Date(b.Date) - new Date(a.Date));
-
-  const pageSize = CONFIG.PAGE_SIZE;
-  const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
-  STATE.regPage = Math.min(STATE.regPage, totalPages);
-  const pageRows = rows.slice((STATE.regPage-1)*pageSize, STATE.regPage*pageSize);
-
-  $('regTable').querySelector('thead').innerHTML = '<tr><th>Date</th><th>Staff</th><th>Activity</th><th>Workflow</th><th>Qty</th><th>Status</th><th>Approval</th><th></th></tr>';
-  $('regTable').querySelector('tbody').innerHTML = pageRows.length ? pageRows.map(r=>`
-    <tr>
-      <td>${escapeHtml(r.Date instanceof Date ? r.Date.toISOString().slice(0,10) : r.Date)}</td>
-      <td>${escapeHtml(r.StaffName)}</td>
-      <td>${escapeHtml(r.ActivityName)}</td>
-      <td>${escapeHtml(r.WorkflowName)}</td>
-      <td>${escapeHtml(r.Quantity)}</td>
-      <td><span class="badge ${r.Status==='Completed'?'badge-success':r.Status==='In Progress'?'badge-warn':'badge-neutral'}">${escapeHtml(r.Status)}</span></td>
-      <td><span class="badge ${r.SupervisorApproval==='Approved'?'badge-success':'badge-neutral'}">${escapeHtml(r.SupervisorApproval)}</span></td>
-      <td><button class="btn btn-danger btn-sm" onclick="deleteRegisterEntry('${r.EntryID}')">Delete</button></td>
-    </tr>`).join('') : `<tr><td colspan="8"><div class="empty-state"><div class="em-icon">📋</div>No register entries yet</div></td></tr>`;
-
-  $('regPagination').innerHTML = `
-    <button class="btn btn-ghost btn-sm" onclick="regChangePage(-1)">‹ Prev</button>
-    <span>Page ${STATE.regPage} of ${totalPages}</span>
-    <button class="btn btn-ghost btn-sm" onclick="regChangePage(1)">Next ›</button>`;
-}
-function regChangePage(delta){ STATE.regPage += delta; renderRegisterTable(); }
-async function deleteRegisterEntry(id){
-  const res = await call(apiPost, 'deleteRegisterEntry', { id });
-  if(res && res.success){ toast('Entry deleted', 'success'); loadRegister(); }
-}
-$('regSearch').addEventListener('input', renderRegisterTable);
-$('regExport').addEventListener('click', ()=> downloadCSV(STATE.register, 'working_register.csv'));
-
-/* =========================================================================
-   ATTENDANCE
-   ========================================================================= */
-function renderAttendanceForm(){
-  $('attTable').querySelector('thead').innerHTML = '';
-  $('attTable').querySelector('tbody').innerHTML = STATE.staff.map(s=>`
-    <tr data-staff="${s.StaffID}">
-      <td>${escapeHtml(s.Name)}</td>
-      <td><select class="att-status">
-            <option>Present</option><option>Absent</option><option>Leave</option><option>Permission</option>
-          </select></td>
-      <td><input class="att-remarks" placeholder="Optional"></td>
-    </tr>`).join('');
-}
-$('attSubmit').addEventListener('click', async ()=>{
-  const date = $('attDate').value;
-  if(!date){ toast('Select a date', 'error'); return; }
-  const rows = [...document.querySelectorAll('#attTable tbody tr')];
-  for(const row of rows){
-    const staffId = row.dataset.staff;
-    const status = row.querySelector('.att-status').value;
-    const remarks = row.querySelector('.att-remarks').value;
-    await apiPost('saveAttendance', { data:{ Date:date, StaffID:staffId, Status:status, Remarks:remarks } });
-  }
-  toast('Attendance saved', 'success');
-  loadAttendanceHistory();
-});
-async function loadAttendanceHistory(){
-  const res = await call(apiGet, 'getAttendance');
-  if(!res || !res.success) return;
-  STATE.attendance = res.data;
-  const rows = STATE.attendance.map(r => Object.assign({}, r, { StaffName: nameOf(STATE.staff, r.StaffID, 'StaffID', 'Name') }));
-  rows.sort((a,b)=> new Date(b.Date) - new Date(a.Date));
-  $('attHistTable').querySelector('thead').innerHTML = '<tr><th>Date</th><th>Staff</th><th>Status</th><th>Remarks</th></tr>';
-  $('attHistTable').querySelector('tbody').innerHTML = rows.slice(0,50).map(r=>`
-    <tr><td>${escapeHtml(r.Date instanceof Date ? r.Date.toISOString().slice(0,10) : r.Date)}</td><td>${escapeHtml(r.StaffName)}</td>
-    <td><span class="badge ${r.Status==='Present'?'badge-success':r.Status==='Absent'?'badge-danger':'badge-warn'}">${escapeHtml(r.Status)}</span></td>
-    <td>${escapeHtml(r.Remarks)}</td></tr>`).join('') || `<tr><td colspan="4"><div class="empty-state">No attendance recorded yet</div></td></tr>`;
-}
-
-/* =========================================================================
-   STAFF MASTER
-   ========================================================================= */
-$('staffSubmit').addEventListener('click', async ()=>{
-  const data = {
-    StaffID: $('staffId').value || undefined,
-    Name: $('staffName').value, Designation: $('staffDesignation').value,
-    Department:'Stores', Section: $('staffSection').value, ReportingManager: $('staffManager').value,
-    Role: $('staffRole').value, Status: $('staffStatus').value, Mobile: $('staffMobile').value, JoiningDate: $('staffJoining').value
-  };
-  if(!data.Name){ toast('Name is required', 'error'); return; }
-  const res = await call(apiPost, 'saveStaff', { data });
-  if(res && res.success){
-    toast('Staff saved', 'success'); resetStaffForm(); loadMasters();
-  }
-});
-function resetStaffForm(){
-  $('staffId').value=''; $('staffName').value=''; $('staffDesignation').value=''; $('staffManager').value='';
-  $('staffMobile').value=''; $('staffJoining').value=''; $('staffFormTitle').textContent='Add Staff'; $('staffCancel').style.display='none';
-}
-$('staffCancel').addEventListener('click', resetStaffForm);
-function editStaff(id){
-  const s = byId(STATE.staff, id, 'StaffID'); if(!s) return;
-  $('staffId').value=s.StaffID; $('staffName').value=s.Name; $('staffDesignation').value=s.Designation;
-  $('staffSection').value=s.Section; $('staffManager').value=s.ReportingManager; $('staffRole').value=s.Role;
-  $('staffStatus').value=s.Status; $('staffMobile').value=s.Mobile; $('staffJoining').value=s.JoiningDate;
-  $('staffFormTitle').textContent='Edit Staff'; $('staffCancel').style.display='inline-flex';
-  window.scrollTo({top:0, behavior:'smooth'});
-}
-async function deleteStaff(id){
-  const res = await call(apiPost, 'deleteStaff', { id });
-  if(res && res.success){ toast('Staff removed', 'success'); loadMasters(); }
-}
-function renderStaffTable(){
-  const search = ($('staffSearch')?.value || '').toLowerCase();
-  let rows = STATE.staff;
-  if(search) rows = rows.filter(s => JSON.stringify(s).toLowerCase().includes(search));
-  $('staffTable').querySelector('thead').innerHTML = '<tr><th>Name</th><th>Designation</th><th>Section</th><th>Role</th><th>Status</th><th></th></tr>';
-  $('staffTable').querySelector('tbody').innerHTML = rows.map(s=>`
-    <tr>
-      <td>${escapeHtml(s.Name)}</td><td>${escapeHtml(s.Designation)}</td>
-      <td>${escapeHtml(nameOf(STATE.sections, s.Section, 'SectionID', 'SectionName') || s.Section)}</td>
-      <td>${escapeHtml(s.Role)}</td>
-      <td><span class="badge ${s.Status==='Active'?'badge-success':'badge-neutral'}">${escapeHtml(s.Status)}</span></td>
-      <td style="display:flex;gap:6px;">
-        <button class="btn btn-ghost btn-sm" onclick="editStaff('${s.StaffID}')">Edit</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteStaff('${s.StaffID}')">Delete</button>
-      </td>
-    </tr>`).join('') || `<tr><td colspan="6"><div class="empty-state">No staff records</div></td></tr>`;
-}
-$('staffSearch') && $('staffSearch').addEventListener('input', renderStaffTable);
-
-/* =========================================================================
-   SECTION MASTER
-   ========================================================================= */
-$('sectionSubmit').addEventListener('click', async ()=>{
-  const name = $('sectionName').value; if(!name){ toast('Section name required','error'); return; }
-  const res = await call(apiPost, 'saveSection', { data:{ SectionName:name, Status:$('sectionStatus').value } });
-  if(res && res.success){ toast('Section saved','success'); $('sectionName').value=''; loadMasters(); }
-});
-async function deleteSection(id){
-  const res = await call(apiPost, 'deleteSection', { id });
-  if(res && res.success){ toast('Section removed','success'); loadMasters(); }
-}
-function renderSectionTable(){
-  $('sectionTable').querySelector('thead').innerHTML = '<tr><th>Section</th><th>Status</th><th></th></tr>';
-  $('sectionTable').querySelector('tbody').innerHTML = STATE.sections.map(s=>`
-    <tr><td>${escapeHtml(s.SectionName)}</td>
-    <td><span class="badge ${s.Status==='Active'?'badge-success':'badge-neutral'}">${escapeHtml(s.Status)}</span></td>
-    <td><button class="btn btn-danger btn-sm" onclick="deleteSection('${s.SectionID}')">Delete</button></td></tr>`).join('') || `<tr><td colspan="3"><div class="empty-state">No sections yet</div></td></tr>`;
-}
-
-/* =========================================================================
-   ACTIVITY & WORKFLOW MASTER
-   ========================================================================= */
-$('activitySubmit').addEventListener('click', async ()=>{
-  const name = $('activityName').value; if(!name){ toast('Activity name required','error'); return; }
-  const res = await call(apiPost, 'saveActivity', { data:{ ActivityName:name, Status:$('activityStatus').value } });
-  if(res && res.success){ toast('Activity saved','success'); $('activityName').value=''; loadMasters(); }
-});
-async function deleteActivity(id){
-  const res = await call(apiPost, 'deleteActivity', { id });
-  if(res && res.success){ toast('Activity removed','success'); loadMasters(); }
-}
-function renderActivityTable(){
-  $('activityTable').querySelector('thead').innerHTML = '<tr><th>Activity</th><th>Status</th><th></th></tr>';
-  $('activityTable').querySelector('tbody').innerHTML = STATE.activities.map(a=>`
-    <tr><td>${escapeHtml(a.ActivityName)}</td>
-    <td><span class="badge ${a.Status==='Active'?'badge-success':'badge-neutral'}">${escapeHtml(a.Status)}</span></td>
-    <td><button class="btn btn-danger btn-sm" onclick="deleteActivity('${a.ActivityID}')">Delete</button></td></tr>`).join('') || `<tr><td colspan="3"><div class="empty-state">No activities yet</div></td></tr>`;
-}
-$('wfSubmit').addEventListener('click', async ()=>{
-  const data = {
-    ActivityID: $('wfActivity').value, WorkflowName: $('wfName').value, KPI: $('wfKpi').value,
-    Unit: $('wfUnit').value, ExpectedOutput: $('wfExpected').value, Weightage: $('wfWeightage').value,
-    MaxScore: $('wfMaxScore').value, Remarks: $('wfRemarks').value
-  };
-  if(!data.WorkflowName){ toast('Workflow name required','error'); return; }
-  const res = await call(apiPost, 'saveWorkflow', { data });
-  if(res && res.success){
-    toast('Workflow saved','success');
-    ['wfName','wfKpi','wfExpected','wfWeightage','wfMaxScore','wfRemarks'].forEach(id=>$(id).value='');
-    loadMasters();
-  }
-});
-async function deleteWorkflow(id){
-  const res = await call(apiPost, 'deleteWorkflow', { id });
-  if(res && res.success){ toast('Workflow removed','success'); loadMasters(); }
-}
-function renderWorkflowTable(){
-  $('wfTable').querySelector('thead').innerHTML = '<tr><th>Workflow</th><th>Activity</th><th>KPI</th><th>Unit</th><th>Weight</th><th></th></tr>';
-  $('wfTable').querySelector('tbody').innerHTML = STATE.workflows.map(w=>`
-    <tr><td>${escapeHtml(w.WorkflowName)}</td><td>${escapeHtml(nameOf(STATE.activities, w.ActivityID, 'ActivityID','ActivityName'))}</td>
-    <td>${escapeHtml(w.KPI)}</td><td>${escapeHtml(w.Unit)}</td><td>${escapeHtml(w.Weightage)}</td>
-    <td><button class="btn btn-danger btn-sm" onclick="deleteWorkflow('${w.WorkflowID}')">Delete</button></td></tr>`).join('') || `<tr><td colspan="6"><div class="empty-state">No workflows yet</div></td></tr>`;
-}
-
-/* =========================================================================
-   STAFF APPRAISAL
-   ========================================================================= */
-$('apCompute').addEventListener('click', async ()=>{
-  const staffId = $('apStaff').value, period = $('apPeriod').value;
-  if(!period){ toast('Enter a period, e.g. Jul-2026', 'error'); return; }
-  const res = await call(apiGet, 'computeAppraisal', { staffId, period });
-  if(res && res.success){
-    const d = res.data;
-    $('apResultPanel').style.display = 'block';
-    $('apResultCards').innerHTML = `
-      <div class="card stat-card"><div class="stat-label">Final Score</div><div class="stat-value">${d.FinalScore}</div></div>
-      <div class="card stat-card"><div class="stat-label">Grade</div><div class="stat-value">${d.Grade}</div></div>
-      <div class="card stat-card"><div class="stat-label">Attendance %</div><div class="stat-value">${d.AttendancePct}</div></div>
-      <div class="card stat-card"><div class="stat-label">Promotion</div><div class="stat-value" style="font-size:18px;">${d.PromotionRecommendation}</div></div>`;
-    toast('Appraisal computed', 'success');
-    loadAppraisalHistory();
-  }
-});
-async function loadAppraisalHistory(){
-  const res = await call(apiGet, 'getAppraisal');
-  if(!res || !res.success) return;
-  STATE.appraisal = res.data;
-  $('apTable').querySelector('thead').innerHTML = '<tr><th>Staff</th><th>Period</th><th>Final Score</th><th>Grade</th><th>Promotion</th></tr>';
-  $('apTable').querySelector('tbody').innerHTML = STATE.appraisal.map(a=>`
-    <tr><td>${escapeHtml(nameOf(STATE.staff, a.StaffID, 'StaffID','Name'))}</td><td>${escapeHtml(a.Period)}</td>
-    <td>${escapeHtml(a.FinalScore)}</td>
-    <td><span class="badge ${a.Grade==='A+'||a.Grade==='A'?'badge-success':a.Grade==='B'?'badge-warn':'badge-danger'}">${escapeHtml(a.Grade)}</span></td>
-    <td>${escapeHtml(a.PromotionRecommendation)}</td></tr>`).join('') || `<tr><td colspan="5"><div class="empty-state">No appraisals computed yet</div></td></tr>`;
-}
-
-/* =========================================================================
-   REPORTS
-   ========================================================================= */
-function populateReportFilters(){
-  const staffOpts = STATE.staff.map(s=>`<option value="${s.StaffID}">${escapeHtml(s.Name)}</option>`).join('');
-  $('repStaff').innerHTML = '<option value="">All</option>' + staffOpts;
-}
-let lastReportRows = [];
-$('repRun').addEventListener('click', async ()=>{
-  const params = { type:$('repType').value, from:$('repFrom').value, to:$('repTo').value, staffId:$('repStaff').value };
-  const res = await call(apiGet, 'getReport', params);
-  if(!res || !res.success) return;
-  lastReportRows = res.data.map(r => Object.assign({}, r, r.StaffID ? { StaffName: nameOf(STATE.staff, r.StaffID, 'StaffID','Name') } : {}));
-  renderReportTable();
-});
-function renderReportTable(){
-  const rows = lastReportRows;
-  if(!rows.length){ $('repTable').querySelector('thead').innerHTML=''; $('repTable').querySelector('tbody').innerHTML = `<tr><td><div class="empty-state">No records match these filters</div></td></tr>`; return; }
-  const headers = Object.keys(rows[0]);
-  $('repTable').querySelector('thead').innerHTML = '<tr>' + headers.map(h=>`<th>${h}</th>`).join('') + '</tr>';
-  $('repTable').querySelector('tbody').innerHTML = rows.map(r=>'<tr>'+headers.map(h=>`<td>${escapeHtml(r[h] instanceof Date ? r[h].toISOString().slice(0,10) : r[h])}</td>`).join('')+'</tr>').join('');
-}
-$('repExport').addEventListener('click', ()=> downloadCSV(lastReportRows, `${$('repType').value}_report.csv`));
-
-/* =========================================================================
-   SETTINGS
-   ========================================================================= */
-$('setSave').addEventListener('click', async ()=>{
-  const data = {
-    CompanyName: $('setCompanyName').value, Department: $('setDepartment').value, AppTitle: $('setAppTitle').value,
-    ThemeColor: $('setThemeColor').value, FinancialYear: $('setFinancialYear').value, LogoUrl: $('setLogoUrl').value,
-    CompanyAddress: $('setAddress').value, FooterText: $('setFooter').value
-  };
-  const res = await call(apiPost, 'saveConfig', { data });
-  if(res && res.success){ toast('Settings saved', 'success'); loadMasters(); }
-});
-$('setApiSave').addEventListener('click', ()=>{
-  const url = $('setApiUrl').value.trim();
-  if(!url){ toast('Paste a valid Apps Script URL', 'error'); return; }
-  localStorage.setItem('apiUrl', url);
-  CONFIG.APPS_SCRIPT_URL = url;
-  toast('Connection saved — reloading data', 'success');
-  bootApp();
-});
-
-/* =========================================================================
-   BOOT
-   ========================================================================= */
-async function bootApp(){
-  if(CONFIG.APPS_SCRIPT_URL === 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE'){
-    toast('https://script.google.com/macros/s/AKfycbzw448cXQsB3mkw2pXtxIamoqcVRWBbGU_sRpCDNqtKZtntd9l2M-F6LZUN-9wMwnl0/exec', 'error');
-    return;
-  }
-  await loadMasters();
-  await renderDashboard();
-  renderAttendanceForm();
-  await loadRegister();
-  await loadAttendanceHistory();
-  await loadAppraisalHistory();
-}
-bootApp();
-</script>
-</body>
-</html>
+/* ============================================================
+   CONFIG — paste your deployed Apps Script Web App URL here
+   ============================================================ */
+const API_URL =227 'https://script.google.com/macros/s/AKfycbxueth3PiJMg9gOf6z5SJKbAaIepDrol472_1J5TwnEG0o8IBmEAzg4T4iFG6usMezKJw/exec';
+               227
+/* ============227================================================
+   STATE       227
+   ============227================================================ */
+let SESSION = n227ull;   // {userId, staffId, staffName, role}
+let MASTERS = {227 staff: [], activities: [], workflows: [] };
+let lineItemCou227nt = 0;
+               227
+/* ============227================================================
+   API WRAPPER 227
+   ============227================================================ */
+async function 227callApi(action, params) {
+  if (!API_URL 227|| API_URL.indexOf('PASTE_') === 0) {
+    throw new E227rror('Backend not connected yet. Deploy code.gs and set API_URL (see SETUP.md).');
+  }            227
+  const res = a227wait fetch(API_URL, {
+    method: 'PO227ST',
+    headers: { 227'Content-Type': 'text/plain;charset=utf-8' }, // avoids CORS preflight on Apps Script
+    body: JSON.227stringify({ action, params })
+  });          227
+  const out = a227wait res.json();
+  if (!out.ok) 227throw new Error(out.error || 'Unknown API error');
+  return out.da227ta;
+}              227
+               227
+function toast(227msg) {
+  const t = doc227ument.getElementById('toast');
+  t.textContent227 = msg;
+  t.classList.a227dd('show');
+  setTimeout(()227 => t.classList.remove('show'), 2600);
+}              227
+               227
+/* ============227================================================
+   AUTH        227
+   ============227================================================ */
+async function 227doLogin() {
+  const userId 227= document.getElementById('loginUserId').value.trim();
+  const passwor227d = document.getElementById('loginPassword').value;
+  const err = d227ocument.getElementById('loginError');
+  const btn = d227ocument.getElementById('loginBtn');
+  err.textConte227nt = '';
+  if (!userId |227| !password) { err.textContent = 'Enter User ID and Password.'; return; }
+  btn.disabled 227= true; btn.textContent = 'Logging in...';
+  try {        227
+    const data 227= await callApi('login', { userId, password });
+    SESSION = d227ata;
+    sessionStor227age.setItem('kpi_session', JSON.stringify(data));
+    enterApp();227
+  } catch (e) {227
+    err.textCon227tent = e.message;
+  } finally {  227
+    btn.disable227d = false; btn.textContent = 'Log In';
+  }            227
+}              227
+               227
+function logout227() {
+  SESSION = nul227l;
+  sessionStorag227e.removeItem('kpi_session');
+  document.getE227lementById('app').style.display = 'none';
+  document.getE227lementById('loginScreen').style.display = 'flex';
+}              227
+               227
+/* ============227================================================
+   NAVIGATION  227
+   ============227================================================ */
+const NAV_ITEMS227 = [
+  { id: 'dashbo227ard', label: '📊 Dashboard', roles: ['Manager', 'Staff'] },
+  { id: 'regist227er', label: '📝 Working Register', roles: ['Manager', 'Staff'] },
+  { id: 'approv227als', label: '✅ Approvals', roles: ['Manager'] },
+  { id: 'attend227ance', label: '🗓️ Attendance', roles: ['Manager', 'Staff'] },
+  { id: 'leave'227, label: '🌴 Leave', roles: ['Manager', 'Staff'] },
+  { id: 'apprai227sal', label: '🏆 Staff Appraisal', roles: ['Manager'] },
+  { id: 'report227s', label: '📁 Reports', roles: ['Manager'] },
+  { id: 'master227s', label: '⚙️ Master Data', roles: ['Manager'] }
+];             227
+               227
+function buildN227av() {
+  const items =227 NAV_ITEMS.filter(n => n.roles.includes(SESSION.role));
+  const sidebar227 = document.getElementById('sidebar');
+  const bottom 227= document.getElementById('bottomNav');
+  sidebar.inner227HTML = '';
+  bottom.innerH227TML = '';
+  items.forEach227((n, i) => {
+    const b1 = 227document.createElement('button');
+    b1.textCont227ent = n.label;
+    b1.onclick 227= () => showView(n.id);
+    b1.dataset.227nav = n.id;
+    sidebar.app227endChild(b1);
+               227
+    const b2 = 227document.createElement('button');
+    b2.textCont227ent = n.label.split(' ')[0];
+    b2.onclick 227= () => showView(n.id);
+    b2.dataset.227nav = n.id;
+    bottom.appe227ndChild(b2);
+  });          227
+  showView(item227s[0].id);
+}              227
+               227
+function showVi227ew(id) {
+  document.quer227ySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getE227lementById('view-' + id).classList.add('active');
+  document.quer227ySelectorAll('[data-nav]').forEach(b => b.classList.toggle('active', b.dataset.nav === id));
+  if (id === 'd227ashboard') loadDashboard();
+  if (id === 'r227egister') loadRegister();
+  if (id === 'a227pprovals') loadApprovals();
+  if (id === 'a227ttendance') loadAttendance();
+  if (id === 'l227eave') loadLeave();
+  if (id === 'm227asters') loadMastersView();
+}              227
+               227
+/* ============227================================================
+   APP BOOT    227
+   ============227================================================ */
+async function 227enterApp() {
+  document.getE227lementById('loginScreen').style.display = 'none';
+  document.getE227lementById('app').style.display = 'flex';
+  document.getE227lementById('whoLabel').textContent = SESSION.staffName + ' · ' + SESSION.role;
+  try {        227
+    MASTERS = a227wait callApi('getMasters', {});
+  } catch (e) {227 toast(e.message); }
+  buildNav();  227
+  document.getE227lementById('regDate').valueAsDate = new Date();
+  document.getE227lementById('attDate').valueAsDate = new Date();
+  addLineItem()227;
+}              227
+               227
+window.addEvent227Listener('DOMContentLoaded', () => {
+  const saved =227 sessionStorage.getItem('kpi_session');
+  if (saved) { 227SESSION = JSON.parse(saved); enterApp(); }
+});            227
+               227
+/* ============227================================================
+   DASHBOARD   227
+   ============227================================================ */
+async function 227loadDashboard() {
+  const now = n227ew Date();
+  const from = 227new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+  const to = no227w.toISOString().slice(0, 10);
+  const p = { f227rom, to };
+  if (SESSION.r227ole === 'Staff') p.staffId = SESSION.staffId;
+  let d;       227
+  try { d = awa227it callApi('getDashboard', p); } catch (e) { toast(e.message); return; }
+               227
+  document.getE227lementById('dashStats').innerHTML = `
+    <div class=227"stat-card"><div class="label">Approved Entries (MTD)</div><div class="value">${d.totalEntries}</div></div>
+    <div class=227"stat-card alt"><div class="label">Total KPI Score (MTD)</div><div class="value">${d.totalKpiScore.toFixed(1)}</div></div>
+    <div class=227"stat-card"><div class="label">Pending Approvals</div><div class="value">${d.pendingApprovals}</div></div>
+    <div class=227"stat-card alt"><div class="label">Role</div><div class="value" style="font-size:18px">${SESSION.role}</div></div>
+  `;           227
+  drawBarChart(227'chartStaff', d.byStaff, '#6F4E37');
+  drawBarChart(227'chartActivity', d.byActivity, '#9C6B45');
+}              227
+               227
+let chartRefs =227 {};
+function drawBa227rChart(canvasId, dataObj, color) {
+  const labels 227= Object.keys(dataObj);
+  const values 227= Object.values(dataObj);
+  const ctx = d227ocument.getElementById(canvasId);
+  if (chartRefs227[canvasId]) chartRefs[canvasId].destroy();
+  chartRefs[can227vasId] = new Chart(ctx, {
+    type: 'bar'227,
+    data: { lab227els, datasets: [{ data: values, backgroundColor: color, borderRadius: 5 }] },
+    options: { 227plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });          227
+}              227
+               227
+/* ============227================================================
+   WORKING REGI227STER
+   ============227================================================ */
+function addLin227eItem() {
+  lineItemCount227++;
+  const id = 'l227ine' + lineItemCount;
+  const div = d227ocument.createElement('div');
+  div.className227 = 'line-item';
+  div.id = id; 227
+  const activit227yOptions = MASTERS.activities.map(a => `<option value="${a['Activity ID']}">${a['Activity Name']}</option>`).join('');
+  div.innerHTML227 = `
+    <button cla227ss="remove" onclick="document.getElementById('${id}').remove()">×</button>
+    <div class=227"form-row">
+      <div><lab227el>Activity</label><select class="li-activity" onchange="populateWorkflows('${id}')"><option value="">Select</option>${activityOptions}</select></div>
+      <div><lab227el>Workflow</label><select class="li-workflow"><option value="">Select Activity first</option></select></div>
+      <div><lab227el>Unit</label><input class="li-unit" type="text" readonly></div>
+    </div>     227
+    <div class=227"form-row">
+      <div><lab227el>Target</label><input class="li-target" type="number" min="0" step="1" value="0"></div>
+      <div><lab227el>Actual</label><input class="li-actual" type="number" min="0" step="1" value="0"></div>
+      <div><lab227el>Remarks</label><input class="li-remarks" type="text"></div>
+    </div>     227
+    <div class=227"li-hint" style="font-size:11.5px;color:var(--coffee-500);margin-top:2px;"></div>
+  `;           227
+  document.getE227lementById('lineItems').appendChild(div);
+}              227
+               227
+function popula227teWorkflows(lineId) {
+  const div = d227ocument.getElementById(lineId);
+  const actId =227 div.querySelector('.li-activity').value;
+  const wfSelec227t = div.querySelector('.li-workflow');
+  const wfs = M227ASTERS.workflows.filter(w => w['Activity ID'] === actId);
+  wfSelect.inne227rHTML = '<option value="">Select</option>' + wfs.map(w =>
+    `<option va227lue="${w['Workflow ID']}" data-unit="${w['Unit']}" data-target="${w['Target']}" data-expected="${w['Expected Output']}" data-weightage="${w['Weightage %']}">${w['Workflow Name']}</option>`
+  ).join('');  227
+  wfSelect.onch227ange = () => {
+    const sel =227 wfSelect.options[wfSelect.selectedIndex];
+    div.querySe227lector('.li-unit').value = sel ? (sel.dataset.unit || '') : '';
+    div.querySe227lector('.li-target').value = sel ? (sel.dataset.target || 0) : 0;
+    div.querySe227lector('.li-hint').textContent = sel && sel.dataset.expected
+      ? `Weight227age ${sel.dataset.weightage}% · Expected: ${sel.dataset.expected}` : '';
+  };           227
+}              227
+               227
+async function 227submitWorkingEntries() {
+  const date = 227document.getElementById('regDate').value;
+  if (!date) { 227toast('Select a date'); return; }
+  const lines =227 [];
+  document.quer227ySelectorAll('.line-item').forEach(div => {
+    const activ227ityId = div.querySelector('.li-activity').value;
+    const workf227lowId = div.querySelector('.li-workflow').value;
+    if (!activi227tyId || !workflowId) return;
+    lines.push(227{
+      activityI227d, workflowId,
+      unit: div227.querySelector('.li-unit').value,
+      target: d227iv.querySelector('.li-target').value,
+      actual: d227iv.querySelector('.li-actual').value,
+      remarks: 227div.querySelector('.li-remarks').value
+    });        227
+  });          227
+  if (lines.len227gth === 0) { toast('Add at least one workflow with valid Activity/Workflow selected'); return; }
+  try {        227
+    const r = a227wait callApi('addWorkingEntries', { staffId: SESSION.staffId, staffName: SESSION.staffName, date, lines });
+    await callA227pi('submitEntryGroup', { staffId: SESSION.staffId, groupId: r.groupId });
+    toast('Subm227itted for approval');
+    document.ge227tElementById('lineItems').innerHTML = '';
+    addLineItem227();
+    loadRegiste227r();
+  } catch (e) {227 toast(e.message); }
+}              227
+               227
+async function 227loadRegister() {
+  const p = SES227SION.role === 'Staff' ? { staffId: SESSION.staffId } : {};
+  let rows;    227
+  try { rows = 227await callApi('getWorkingRegister', p); } catch (e) { toast(e.message); return; }
+  rows.sort((a,227 b) => new Date(b['Date']) - new Date(a['Date']));
+  const tbody =227 document.querySelector('#registerTable tbody');
+  tbody.innerHT227ML = rows.slice(0, 50).map(r => `
+    <tr>       227
+      <td>${fmt227Date(r['Date'])}</td><td>${r['Staff Name']}</td><td>${r['Activity Name']}</td><td>${r['Workflow Name']}</td>
+      <td>${r['227Target']}</td><td>${r['Actual']}</td><td>${r['Achievement %']}%</td><td>${r['KPI Score']}</td>
+      <td><span227 class="badge ${r['Approval Status']}">${r['Approval Status']}</span></td>
+    </tr>`).joi227n('') || `<tr><td colspan="9" class="empty">No entries yet</td></tr>`;
+}              227
+               227
+/* ============227================================================
+   APPROVALS (M227anager)
+   ============227================================================ */
+async function 227loadApprovals() {
+  let groups;  227
+  try { groups 227= await callApi('getPendingApprovals', {}); } catch (e) { toast(e.message); return; }
+  const el = do227cument.getElementById('approvalsList');
+  if (groups.le227ngth === 0) { el.innerHTML = '<div class="card empty">No pending approvals 🎉</div>'; return; }
+  el.innerHTML 227= groups.map(g => `
+    <div class=227"card">
+      <div styl227e="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div><s227trong>${g.staffName}</strong> &middot; ${fmtDate(g.date)}</div>
+        <div>  227
+          <butt227on class="btn btn-ok btn-sm" onclick="decideGroup('${g.groupId}','Approved')">Approve</button>
+          <butt227on class="btn btn-danger btn-sm" onclick="decideGroup('${g.groupId}','Rejected')">Reject</button>
+        </div> 227
+      </div>   227
+      <div clas227s="table-wrap"><table><thead><tr><th>Activity</th><th>Workflow</th><th>Target</th><th>Actual</th><th>Ach %</th><th>KPI Score</th></tr></thead><tbody>
+        ${g.lin227es.map(l => `<tr><td>${l['Activity Name']}</td><td>${l['Workflow Name']}</td><td>${l['Target']}</td><td>${l['Actual']}</td><td>${l['Achievement %']}%</td><td>${l['KPI Score']}</td></tr>`).join('')}
+      </tbody><227/table></div>
+    </div>     227
+  `).join(''); 227
+}              227
+               227
+async function 227decideGroup(groupId, decision) {
+  try {        227
+    await callA227pi('approveEntryGroup', { actorRole: SESSION.role, actorUserId: SESSION.userId, groupId, decision });
+    toast(decis227ion);
+    loadApprova227ls();
+  } catch (e) {227 toast(e.message); }
+}              227
+               227
+/* ============227================================================
+   ATTENDANCE  227
+   ============227================================================ */
+async function 227markAttendance() {
+  const date = 227document.getElementById('attDate').value;
+  const status 227= document.getElementById('attStatus').value;
+  const permiss227ionHours = document.getElementById('attPermHrs').value;
+  const remarks227 = document.getElementById('attRemarks').value;
+  if (!date) { 227toast('Select a date'); return; }
+  try {        227
+    await callA227pi('markAttendance', { staffId: SESSION.staffId, staffName: SESSION.staffName, date, status, permissionHours, remarks });
+    toast('Atte227ndance saved');
+    loadAttenda227nce();
+  } catch (e) {227 toast(e.message); }
+}              227
+               227
+async function 227loadAttendance() {
+  const p = SES227SION.role === 'Staff' ? { staffId: SESSION.staffId } : {};
+  let rows;    227
+  try { rows = 227await callApi('getAttendance', p); } catch (e) { toast(e.message); return; }
+  rows.sort((a,227 b) => new Date(b['Date']) - new Date(a['Date']));
+  document.quer227ySelector('#attendanceTable tbody').innerHTML = rows.slice(0, 50).map(r => `
+    <tr><td>${f227mtDate(r['Date'])}</td><td>${r['Staff Name']}</td><td>${r['Status']}</td><td>${r['Permission Hours']}</td><td>${r['Remarks']}</td></tr>
+  `).join('') |227| `<tr><td colspan="5" class="empty">No attendance records</td></tr>`;
+}              227
+               227
+/* ============227================================================
+   LEAVE       227
+   ============227================================================ */
+async function 227applyLeave() {
+  const fromDat227e = document.getElementById('lvFrom').value;
+  const toDate 227= document.getElementById('lvTo').value;
+  const leaveTy227pe = document.getElementById('lvType').value;
+  const reason 227= document.getElementById('lvReason').value;
+  if (!fromDate227 || !toDate) { toast('Select From and To dates'); return; }
+  try {        227
+    await callA227pi('applyLeave', { staffId: SESSION.staffId, staffName: SESSION.staffName, fromDate, toDate, leaveType, reason });
+    toast('Leav227e applied');
+    loadLeave()227;
+  } catch (e) {227 toast(e.message); }
+}              227
+               227
+async function 227loadLeave() {
+  const p = SES227SION.role === 'Staff' ? { staffId: SESSION.staffId } : {};
+  let rows;    227
+  try { rows = 227await callApi('getLeaves', p); } catch (e) { toast(e.message); return; }
+  document.quer227ySelector('#leaveTable tbody').innerHTML = rows.map(r => `
+    <tr>       227
+      <td>${r['227Staff Name']}</td><td>${fmtDate(r['From Date'])}</td><td>${fmtDate(r['To Date'])}</td>
+      <td>${r['227Leave Type']}</td><td>${r['Reason']}</td><td><span class="badge ${r['Status'] === 'Approved' ? 'Approved' : (r['Status'] === 'Rejected' ? 'Rejected' : 'Submitted')}">${r['Status']}</span></td>
+      <td>${SES227SION.role === 'Manager' && r['Status'] === 'Pending' ? `
+        <button227 class="btn btn-ok btn-sm" onclick="decideLeave('${r['Leave ID']}','Approved')">✓</button>
+        <button227 class="btn btn-danger btn-sm" onclick="decideLeave('${r['Leave ID']}','Rejected')">✕</button>` : ''}</td>
+    </tr>      227
+  `).join('') |227| `<tr><td colspan="7" class="empty">No leave records</td></tr>`;
+}              227
+               227
+async function 227decideLeave(leaveId, decision) {
+  try {        227
+    await callA227pi('decideLeave', { actorRole: SESSION.role, actorUserId: SESSION.userId, leaveId, decision });
+    toast(decis227ion);
+    loadLeave()227;
+  } catch (e) {227 toast(e.message); }
+}              227
+               227
+/* ============227================================================
+   APPRAISAL   227
+   ============227================================================ */
+let lastApprais227al = [];
+async function 227loadAppraisal() {
+  const from = 227document.getElementById('apprFrom').value;
+  const to = do227cument.getElementById('apprTo').value;
+  try { lastApp227raisal = await callApi('getAppraisal', { from, to }); } catch (e) { toast(e.message); return; }
+  document.quer227ySelector('#appraisalTable tbody').innerHTML = lastAppraisal.map(a => `
+    <tr>       227
+      <td>${a.s227taffName}</td><td>${a.designation}</td><td>${a.section}</td><td>${a.entries}</td>
+      <td>${a.t227otalKpiScore.toFixed(1)}</td><td>${a.totalMaxScore.toFixed(1)}</td><td>${a.overallPct}%</td>
+      <td><span227 class="badge ${ratingBadgeClass(a.rating)}">${a.rating}</span></td>
+    </tr>`).joi227n('') || `<tr><td colspan="8" class="empty">No approved entries in this range</td></tr>`;
+}              227
+function rating227BadgeClass(r) {
+  if (r === 'Ou227tstanding' || r === 'Excellent') return 'Approved';
+  if (r === 'Go227od' || r === 'Satisfactory') return 'Submitted';
+  return 'Rejec227ted';
+}              227
+function export227Appraisal() {
+  if (!lastAppr227aisal.length) { toast('Run the appraisal first'); return; }
+  const rows = 227lastAppraisal.map(a => ({
+    Staff: a.st227affName, Designation: a.designation, Section: a.section, Entries: a.entries,
+    'KPI Score'227: a.totalKpiScore, 'Max Possible': a.totalMaxScore, 'Overall %': a.overallPct, Rating: a.rating
+  }));         227
+  exportXlsx(ro227ws, 'Staff_Appraisal.xlsx');
+}              227
+               227
+/* ============227================================================
+   REPORTS     227
+   ============227================================================ */
+let lastReport 227= [];
+async function 227runReport() {
+  const from = 227document.getElementById('repFrom').value;
+  const to = do227cument.getElementById('repTo').value;
+  const groupFi227eld = document.getElementById('repGroupBy').value;
+  let rows;    227
+  try { rows = 227await callApi('getWorkingRegister', { from, to, status: 'Approved' }); } catch (e) { toast(e.message); return; }
+  const agg = {227};
+  rows.forEach(227r => {
+    const key =227 r[groupField];
+    if (!agg[ke227y]) agg[key] = { key, entries: 0, target: 0, actual: 0, achSum: 0, kpi: 0 };
+    agg[key].en227tries++;
+    agg[key].ta227rget += Number(r['Target']) || 0;
+    agg[key].ac227tual += Number(r['Actual']) || 0;
+    agg[key].ac227hSum += Number(r['Achievement %']) || 0;
+    agg[key].kp227i += Number(r['KPI Score']) || 0;
+  });          227
+  lastReport = 227Object.values(agg).map(a => ({
+    Group: a.ke227y, Entries: a.entries, 'Total Target': a.target, 'Total Actual': a.actual,
+    'Avg Achiev227ement %': Math.round((a.achSum / a.entries) * 100) / 100, 'Total KPI Score': Math.round(a.kpi * 100) / 100
+  }));         227
+  document.quer227ySelector('#reportTable tbody').innerHTML = lastReport.map(r => `
+    <tr><td>${r227.Group}</td><td>${r.Entries}</td><td>${r['Total Target']}</td><td>${r['Total Actual']}</td><td>${r['Avg Achievement %']}%</td><td>${r['Total KPI Score']}</td></tr>
+  `).join('') |227| `<tr><td colspan="6" class="empty">No data for this range</td></tr>`;
+}              227
+function export227Report() {
+  if (!lastRepo227rt.length) { toast('Run the report first'); return; }
+  exportXlsx(la227stReport, 'Stores_Report.xlsx');
+}              227
+               227
+function export227Xlsx(rows, filename) {
+  const ws = XL227SX.utils.json_to_sheet(rows);
+  const wb = XL227SX.utils.book_new();
+  XLSX.utils.bo227ok_append_sheet(wb, ws, 'Report');
+  XLSX.writeFil227e(wb, filename);
+}              227
+               227
+/* ============227================================================
+   MASTERS VIEW227
+   ============227================================================ */
+function loadMa227stersView() {
+  document.quer227ySelector('#staffTable tbody').innerHTML = MASTERS.staff.map(s => `
+    <tr><td>${s227['Staff ID']}</td><td>${s['Staff Name']}</td><td>${s['Designation']}</td><td>${s['Section']}</td><td>${s['Status']}</td></tr>
+  `).join(''); 227
+  document.quer227ySelector('#workflowTable tbody').innerHTML = MASTERS.workflows.map(w => `
+    <tr><td>${w227['Activity Name']}</td><td>${w['Workflow Name']}</td><td>${w['KPI Name']}</td><td>${w['Unit']}</td>
+    <td>${w['Ta227rget']}</td><td>${w['Weightage %']}</td><td>${w['Max Score']}</td><td>${w['Expected Output']}</td><td>${w['Status']}</td></tr>
+  `).join(''); 227
+}              227
+               227
+/* ============227================================================
+   UTIL        227
+   ============227================================================ */
+function fmtDat227e(d) {
+  if (!d) retur227n '';
+  const dt = ne227w Date(d);
+  if (isNaN(dt)227) return d;
+  const dd = St227ring(dt.getDate()).padStart(2, '0');
+  const mm = St227ring(dt.getMonth() + 1).padStart(2, '0');
+  return `${dd}227-${mm}-${dt.getFullYear()}`;
+}              227
+</script>      227
+</body>        227
+</html>        227
+               227
